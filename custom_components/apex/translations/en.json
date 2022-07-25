@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Apex Controller Password",
+                    "username": "Apex Controller Username",
+                    "deviceip": "Apex Controller IP"
+                }
+            }
+        }
+    },
+    "title": "Apex"
+}
