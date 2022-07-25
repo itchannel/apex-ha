@@ -51,7 +51,7 @@ class Switch(ApexEntity, SwitchEntity):
                 "ON"
             )
             if update == True:
-                self._state = False
+                self._state = True
                 self.async_write_ha_state()
 
            
