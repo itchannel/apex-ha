@@ -1,4 +1,5 @@
 {
+    "title": "Apex Controller Integration",
     "config": {
         "abort": {
             "already_configured": "Account is already configured"
