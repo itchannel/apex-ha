@@ -70,7 +70,7 @@ class Switch(ApexEntity, SwitchEntity):
             return False
         for value in self.coordinator.data["outputs"]:
             if value["did"] == self.switch["did"]:
-                if value["status"][0] == "ON" or value["status"][0] == "AUTO":
+                if value["status"][0] == "ON" or value["status"][0] == "AON":
                     return True
                 else:
                     return False
