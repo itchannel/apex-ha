@@ -16,7 +16,6 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     for value in entry.data["inputs"]:
         sensor = ApexSensor(entry, value, config_entry.options)
-        _LOGGER.debug(sensor.coordinator.data)
         async_add_entities([sensor], True)
 
 

@@ -109,8 +109,8 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
                 data = await self._hass.async_add_executor_job(
                     self.apex.status  # Fetch new status
                 )
-                _LOGGER.debug("Refreshing Now")
-                _LOGGER.debug(data)
+                #_LOGGER.debug("Refreshing Now")
+                #_LOGGER.debug(data)
 
                 return data
         except Exception as ex:
@@ -159,6 +159,8 @@ class ApexEntity(CoordinatorEntity):
         return {
             "identifiers": {(DOMAIN, self.coordinator.deviceip)},
             "name": f"Apex Controller ({self.coordinator.deviceip})",
+            "hw_version": self.coordinator.data["system"]["hardware"],
+            "sw_version": self.coordinator.data["system"]["software"],
             "manufacturer": MANUFACTURER,
             "test": "TEST"
         }

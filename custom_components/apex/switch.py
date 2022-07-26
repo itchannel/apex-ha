@@ -12,10 +12,8 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Switch from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
-    _LOGGER.debug(entry.data)
     
     for value in entry.data["outputs"]:
-        _LOGGER.debug(value)
         sw = Switch(entry, value, config_entry.options)
         async_add_entities([sw], False)
 
@@ -60,7 +58,6 @@ class Switch(ApexEntity, SwitchEntity):
 
     @property
     def device_id(self):
-        _LOGGER.debug(self.device_id)
         return self.device_id
 
     @property
