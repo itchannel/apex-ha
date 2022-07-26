@@ -24,3 +24,5 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CATEGORY: integration
+      - uses: "home-assistant/actions/hassfest@master"
+        name: Validate with hassfest
