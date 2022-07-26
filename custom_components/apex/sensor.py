@@ -34,6 +34,12 @@ class ApexSensor(
         # Required for HA 2022.7
         self.coordinator_context = object()
 
+    def get_value(self, ftype):
+        if ftype == "state":
+            for key, value in self.coordinator.data["inputs"]:
+                if value["did"] == self.sensor["did"]:
+                    return value["value"]
+            
     
     @property
     def name(self):

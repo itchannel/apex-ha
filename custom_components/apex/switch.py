@@ -14,19 +14,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entry = hass.data[DOMAIN][config_entry.entry_id]
     _LOGGER.debug(entry.data)
     
-    #data = await hass.async_add_executor_job(
-    #        entry.apex.status  # Fetch new status
-    #    )
-    #_LOGGER.debug(data)
-    # switches = [Switch(entry)]
-    # async_add_entities(switches, False)
     for value in entry.data["outputs"]:
         _LOGGER.debug(value)
         sw = Switch(entry, value, config_entry.options)
         async_add_entities([sw], False)
-       # sw = Switch(entry, key, config_entry.options)
-        # Only add guard entity if supported b
-       # async_add_entities([sw], False)
+
 
 
 class Switch(ApexEntity, SwitchEntity):
@@ -37,10 +29,7 @@ class Switch(ApexEntity, SwitchEntity):
         self._device_id = "apex_output_" + switch["did"]
         self.switch = switch
         self.coordinator = coordinator
-        if self.switch["status"][0] == "ON" or self.switch["status"][0] == "AUTO":
-            self._state = True
-        else:
-            self._state = False
+        self._state = None
         # Required for HA 2022.7
         self.coordinator_context = object()
 
@@ -65,19 +54,30 @@ class Switch(ApexEntity, SwitchEntity):
                 self._state = False
                 self.async_write_ha_state()
 
-
-
     @property
     def name(self):
         return self.switch["name"]
 
     @property
     def device_id(self):
-        return self._device_id
+        _LOGGER.debug(self.device_id)
+        return self.device_id
 
     @property
     def is_on(self):
-        return self._state
+        if self._state == "ON":
+            self._state = None
+            return True
+        elif self._state == "OFF":
+            self._state = None
+            return False
+        for value in self.coordinator.data["outputs"]:
+            if value["did"] == self.switch["did"]:
+                if value["status"][0] == "ON" or value["status"][0] == "AUTO":
+                    return True
+                else:
+                    return False
+
 
 
     @property

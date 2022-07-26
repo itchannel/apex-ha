@@ -6,6 +6,7 @@ from datetime import timedelta
 import async_timeout
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -28,7 +29,7 @@ PLATFORMS = ["sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=300)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -111,12 +112,6 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Refreshing Now")
                 _LOGGER.debug(data)
 
-
-                # If data has now been fetched but was previously unavailable, log and reset
-                if not self._available:
-                    _LOGGER.info("Restored connection to Apex for %s", self.deviceip)
-                    self._available = True
-
                 return data
         except Exception as ex:
             self._available = False  # Mark as unavailable
@@ -138,9 +133,16 @@ class ApexEntity(CoordinatorEntity):
         self._device_id = device_id
         self._name = name
 
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        self._handle_coordinator_update()
+
     @property
     def name(self):
         """Return the name of the entity."""
+        _LOGGER.debug(self._name)
         return self._name
 
     @property
