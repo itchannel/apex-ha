@@ -36,9 +36,13 @@ class ApexSensor(
 
     def get_value(self, ftype):
         if ftype == "state":
-            for key, value in self.coordinator.data["inputs"]:
+            for value in self.coordinator.data["inputs"]:
                 if value["did"] == self.sensor["did"]:
                     return value["value"]
+        if ftype == "attributes":
+            for value in self.coordinator.data["inputs"]:
+                if value["did"] == self.sensor["did"]:
+                    return value
             
     
     @property
@@ -47,7 +51,7 @@ class ApexSensor(
 
     @property
     def state(self):
-        return self.sensor["value"]
+        return self.get_value("state")
 
     @property
     def device_id(self):
@@ -55,7 +59,7 @@ class ApexSensor(
 
     @property
     def extra_state_attributes(self):
-        return self.sensor
+        return self.get_value("attributes")
 
     @property
     def unit_of_measurement(self):
