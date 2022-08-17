@@ -43,7 +43,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     deviceip = entry.data[DEVICEIP]
-    update_interval = entry.options[UPDATE_INTERVAL]
+    if UPDATE_INTERVAL in entry.options:
+        update_interval = entry.options[UPDATE_INTERVAL]
+    else:
+        update_interval = 5
     for ar in entry.data:
         _LOGGER.debug(ar)
 
