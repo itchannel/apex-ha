@@ -47,6 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval = entry.options[UPDATE_INTERVAL]
     else:
         update_interval = 5
+    _LOGGER.debug(update_interval)
     for ar in entry.data:
         _LOGGER.debug(ar)
 
@@ -65,12 +66,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
+    async def async_set_options_service(service_call):
+        await hass.async_add_executor_job(set_output, hass, service_call, coordinator)
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_output", 
+        async_set_options_service
+    )
+
 
 
     return True
 
 
-
+def set_output(hass, service, coordinator):
+    did = service.data.get("did").strip()
+    setting = service.data.get("setting").strip()
+    status = coordinator.apex.toggle_output(did, setting)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

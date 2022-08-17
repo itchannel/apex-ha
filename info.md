@@ -1,6 +1,7 @@
 ## **Changelog**
 ### Version 1.05
 - Add update interval to options
+- Add set_output service to allow setting to OFF/ON/AUTO (Switches only support OFF/ON in HA)
 ### Version 1.04
 - Update translations file for hacfest workflow
 ### Version 1.03

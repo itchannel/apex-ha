@@ -10,5 +10,8 @@ Use HACS and add as a custom repo. Once the integration is installed go to your 
 - Password (Apex Controller Password)
 - Apex Controller IP Address
 
+## Options
+You can set the update interval that the integration polls the controller (in seconds). Be aware you will need to reload the integration once updating options for this to take affect. 
+
 
 This is a diy integration and is not supported or affiliated with Neptune Systems.
