@@ -20,6 +20,7 @@ from .const import (
     DOMAIN,
     DEVICEIP,
     MANUFACTURER,
+    UPDATE_INTERVAL
 )
 from .apex import Apex
 
@@ -29,7 +30,6 @@ PLATFORMS = ["sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -43,10 +43,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     deviceip = entry.data[DEVICEIP]
+    update_interval = entry.options[UPDATE_INTERVAL]
     for ar in entry.data:
         _LOGGER.debug(ar)
 
-    coordinator = ApexDataUpdateCoordinator(hass, user, password, deviceip)
+    coordinator = ApexDataUpdateCoordinator(hass, user, password, deviceip, update_interval)
 
     await coordinator.async_refresh()  # Get initial data
 
@@ -88,7 +89,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class ApexDataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to handle fetching new data about the Apex Controller."""
 
-    def __init__(self, hass, user, password, deviceip):
+    def __init__(self, hass, user, password, deviceip, update_interval):
         """Initialize the coordinator and set up the Controller object."""
         self._hass = hass
         self.deviceip = deviceip
@@ -99,7 +100,7 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(minutes=update_interval),
         )
 
     async def _async_update_data(self):

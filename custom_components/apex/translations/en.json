@@ -11,10 +11,20 @@
         "step": {
             "user": {
                 "data": {
-                    "password": "Apex Controller Password",
                     "username": "Apex Controller Username",
+                    "password": "Apex Controller Password",
                     "deviceip": "Apex Controller IP"
                 }
+            }
+        }
+    },
+        "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "update_interval": "Interval to poll Controller (Minutes)"
+                },
+                "description": "Configure Controller Options"
             }
         }
     }

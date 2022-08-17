@@ -15,3 +15,6 @@ SENSORS = {
     "Cond": {"icon": "mdi:shaker-outline"}, 
     "digital": {"icon": "mdi:digital-ocean"}
 }
+
+UPDATE_INTERVAL = "update_interval"
+UPDATE_INTERVAL_DEFAULT = 1

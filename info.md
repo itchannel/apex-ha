@@ -1,4 +1,6 @@
 ## **Changelog**
+### Version 1.05
+- Add update interval to options
 ### Version 1.04
 - Update translations file for hacfest workflow
 ### Version 1.03
