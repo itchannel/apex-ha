@@ -4,7 +4,7 @@
     "config_flow": true,
     "documentation": "https://github.com/itchannel/apex-ha",
     "issue_tracker": "https://github.com/itchannel/apex-ha/issues",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "requirements": [],
     "ssdp": [],
     "zeroconf": [],

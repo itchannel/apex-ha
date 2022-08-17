@@ -20,6 +20,7 @@ from .const import (
     DOMAIN,
     DEVICEIP,
     MANUFACTURER,
+    UPDATE_INTERVAL
 )
 from .apex import Apex
 
@@ -29,7 +30,6 @@ PLATFORMS = ["sensor", "switch"]
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -43,10 +43,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     deviceip = entry.data[DEVICEIP]
+    if UPDATE_INTERVAL in entry.options:
+        update_interval = entry.options[UPDATE_INTERVAL]
+    else:
+        update_interval = 5
+    _LOGGER.debug(update_interval)
     for ar in entry.data:
         _LOGGER.debug(ar)
 
-    coordinator = ApexDataUpdateCoordinator(hass, user, password, deviceip)
+    coordinator = ApexDataUpdateCoordinator(hass, user, password, deviceip, update_interval)
 
     await coordinator.async_refresh()  # Get initial data
 
@@ -61,12 +66,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass.config_entries.async_forward_entry_setup(entry, component)
         )
 
+    async def async_set_options_service(service_call):
+        await hass.async_add_executor_job(set_output, hass, service_call, coordinator)
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_output", 
+        async_set_options_service
+    )
+
 
 
     return True
 
 
-
+def set_output(hass, service, coordinator):
+    did = service.data.get("did").strip()
+    setting = service.data.get("setting").strip()
+    status = coordinator.apex.toggle_output(did, setting)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -88,7 +105,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
 class ApexDataUpdateCoordinator(DataUpdateCoordinator):
     """DataUpdateCoordinator to handle fetching new data about the Apex Controller."""
 
-    def __init__(self, hass, user, password, deviceip):
+    def __init__(self, hass, user, password, deviceip, update_interval):
         """Initialize the coordinator and set up the Controller object."""
         self._hass = hass
         self.deviceip = deviceip
@@ -99,7 +116,7 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            update_interval=timedelta(minutes=update_interval),
         )
 
     async def _async_update_data(self):

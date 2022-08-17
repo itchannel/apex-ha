@@ -8,7 +8,9 @@ from homeassistant.core import callback
 
 from .const import (  # pylint:disable=unused-import
     DOMAIN, 
-    DEVICEIP
+    DEVICEIP,
+    UPDATE_INTERVAL, 
+    UPDATE_INTERVAL_DEFAULT
 )
 from .apex import Apex
 
@@ -88,6 +90,12 @@ class OptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
         options = {
+            vol.Optional(
+                UPDATE_INTERVAL,
+                default=self.config_entry.options.get(
+                    UPDATE_INTERVAL, UPDATE_INTERVAL_DEFAULT
+                ),
+            ): int,
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
