@@ -37,8 +37,10 @@ class Switch(ApexEntity, SwitchEntity):
                 self.switch["did"],
                 "ON"
             )
-            if update == True:
+            if update["status"][0] == "ON" or update["status"][0] == "AON":
                 self._state = True
+                self.switch["status"] = update["status"]
+                _LOGGER.debug("Writing state ON")
                 self.async_write_ha_state()
 
            
@@ -48,8 +50,10 @@ class Switch(ApexEntity, SwitchEntity):
                 self.switch["did"],
                 "OFF"
             )
-            if update == True:
+            if update["status"][0] == "OFF" or update["status"][0] == "AOF":
                 self._state = False
+                self.switch["status"] = update["status"]
+                _LOGGER.debug("Writing state OFF")
                 self.async_write_ha_state()
 
     @property
@@ -62,10 +66,10 @@ class Switch(ApexEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        if self._state == "ON":
+        if self._state == True:
             self._state = None
             return True
-        elif self._state == "OFF":
+        elif self._state == False:
             self._state = None
             return False
         for value in self.coordinator.data["outputs"]:

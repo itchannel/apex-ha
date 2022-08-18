@@ -20,7 +20,8 @@ from .const import (
     DOMAIN,
     DEVICEIP,
     MANUFACTURER,
-    UPDATE_INTERVAL
+    UPDATE_INTERVAL,
+    UPDATE_INTERVAL_DEFAULT
 )
 from .apex import Apex
 
@@ -46,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if UPDATE_INTERVAL in entry.options:
         update_interval = entry.options[UPDATE_INTERVAL]
     else:
-        update_interval = 5
+        update_interval = UPDATE_INTERVAL_DEFAULT
     _LOGGER.debug(update_interval)
     for ar in entry.data:
         _LOGGER.debug(ar)
@@ -116,7 +117,7 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(minutes=update_interval),
+            update_interval=timedelta(seconds=update_interval),
         )
 
     async def _async_update_data(self):

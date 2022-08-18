@@ -17,6 +17,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for value in entry.data["inputs"]:
         sensor = ApexSensor(entry, value, config_entry.options)
         async_add_entities([sensor], True)
+    for value in entry.data["outputs"]:
+        if value["type"] == "dos":
+            sensor = ApexSensor(entry, value, config_entry.options)
+            async_add_entities([sensor], True)
 
 
 class ApexSensor(
@@ -33,15 +37,24 @@ class ApexSensor(
         # Required for HA 2022.7
         self.coordinator_context = object()
 
+    # Need to tidy this section up and avoid using so many for loops
     def get_value(self, ftype):
         if ftype == "state":
             for value in self.coordinator.data["inputs"]:
                 if value["did"] == self.sensor["did"]:
                     return value["value"]
+            for value in self.coordinator.data["outputs"]:
+                if value["did"] == self.sensor["did"]:
+                    if self.sensor["type"] == "dos":
+                        return value["status"][4]
         if ftype == "attributes":
             for value in self.coordinator.data["inputs"]:
                 if value["did"] == self.sensor["did"]:
                     return value
+            for value in self.coordinator.data["outputs"]:
+                if value["did"] == self.sensor["did"]:
+                    if self.sensor["type"] == "dos":
+                        return value
             
     
     @property
@@ -62,6 +75,9 @@ class ApexSensor(
 
     @property
     def unit_of_measurement(self):
+        if self.sensor["type"] in SENSORS:
+            if "measurement" in SENSORS[self.sensor["type"]]:
+                return SENSORS[self.sensor["type"]]["measurement"]
         return None
 
     @property
