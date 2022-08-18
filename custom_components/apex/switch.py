@@ -62,10 +62,10 @@ class Switch(ApexEntity, SwitchEntity):
 
     @property
     def is_on(self):
-        if self._state == "ON":
+        if self._state == True:
             self._state = None
             return True
-        elif self._state == "OFF":
+        elif self._state == False:
             self._state = None
             return False
         for value in self.coordinator.data["outputs"]:
