@@ -22,7 +22,7 @@
         "step": {
             "init": {
                 "data": {
-                    "update_interval": "Interval to poll Controller (Minutes)"
+                    "update_interval": "Interval to poll Controller (Seconds)"
                 },
                 "description": "Configure Controller Options"
             }

@@ -1,4 +1,8 @@
 ## **Changelog**
+### Version 1.06
+- Change update interval to seconds instead of minutes as requested (Be aware quicker than 30 second polling can crash the controller)
+- Add DOS bottle levels to sensor data
+- Add more icons and measurements for missing sensors
 ### Version 1.05
 - Add update interval to options
 - Add set_output service to allow setting to OFF/ON/AUTO (Switches only support OFF/ON in HA)
