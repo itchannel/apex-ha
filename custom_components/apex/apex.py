@@ -105,9 +105,8 @@ class Apex(object):
             json = data
         )
         data = r.json()
-        if data["status"][0] == state:
-            return True
-        else:
-            return False
+        _LOGGER.debug(data)
+        return data
+
 
 
