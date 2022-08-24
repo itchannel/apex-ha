@@ -24,7 +24,7 @@ class Switch(ApexEntity, SwitchEntity):
 
     def __init__(self, coordinator, switch, options):
 
-        self._device_id = "apex_output_" + switch["did"]
+        self._device_id = "apex_" + switch["did"]
         self.switch = switch
         self.coordinator = coordinator
         self._state = None
@@ -58,7 +58,7 @@ class Switch(ApexEntity, SwitchEntity):
 
     @property
     def name(self):
-        return self.switch["name"]
+        return "apex_" + self.switch["name"]
 
     @property
     def device_id(self):

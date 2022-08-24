@@ -59,7 +59,7 @@ class ApexSensor(
     
     @property
     def name(self):
-        return self.sensor["name"]
+        return "apex_" + self.sensor["name"]
 
     @property
     def state(self):
