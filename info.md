@@ -1,4 +1,6 @@
 ## **Changelog**
+### Version 1.07
+- Change naming scheme for entities to start with apex_ **Breaking change: This will create duplicate entities as the naming scheme has changed and any existing automations will need to be updated to the new format**
 ### Version 1.06
 - Change update interval to seconds instead of minutes as requested (Be aware quicker than 30 second polling can crash the controller)
 - Add DOS bottle levels to sensor data
