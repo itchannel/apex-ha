@@ -8,7 +8,8 @@ SWITCHES = {
     "variable": {"icon": "mdi:cog"},
     "afs": {"icon": "mdi:shaker"},
     "24v": {"icon": "mdi:home-lightning-bolt-outline"},
-    "dos": {"icon": "mdi:mdi:test-tube"}
+    "dos": {"icon": "mdi:test-tube"},
+    "virtual": {"icon": "mdi:monitor-account"}
     }
 
 SENSORS = {
