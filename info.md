@@ -1,4 +1,6 @@
 ## **Changelog**
+## Version 1.08
+- Bug fix for config error on old status.xml file
 ### Version 1.07
 - Change naming scheme for entities to start with apex_ **Breaking change: This will create duplicate entities as the naming scheme has changed and any existing automations will need to be updated to the new format**
 - Add retrieval of measurements from Apex config e.g. temp probes report correct Celcius or Fahrenheit
