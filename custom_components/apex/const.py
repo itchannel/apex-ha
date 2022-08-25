@@ -10,7 +10,7 @@ SWITCHES = {
     "24v": {"icon": "mdi:home-lightning-bolt-outline"},
     "dos": {"icon": "mdi:test-tube"},
     "virtual": {"icon": "mdi:monitor-account"},
-    "iotaPump|Sicce|Syncra", {"icon" : "mdi:pump"}
+    "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump"}
     }
 
 SENSORS = {
