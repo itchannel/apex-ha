@@ -139,6 +139,7 @@ class Apex(object):
 
         if self.version == "old":
             result = {}
+            return result
         if self.sid is None:
             _LOGGER.debug("We are none")
             self.auth()
