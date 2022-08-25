@@ -2,6 +2,7 @@ import json
 import logging
 import requests
 import time
+import xmltodict
 
 
 defaultHeaders = {
@@ -20,11 +21,11 @@ class Apex(object):
         self.password = password
         self.deviceip = deviceip
         self.sid = None
+        self.version = "new"
 
 
 
     def auth(self):
-        print("Logging In")
         headers = {
             **defaultHeaders
         }
@@ -33,33 +34,90 @@ class Apex(object):
             "password": self.password, 
             "remember_me" : False
         }
+        # Try logging in 3 times due to controller timeout
+        login = 0
+        while login < 3:
+            r = requests.post(
+                "http://" + self.deviceip + "/rest/login",
+                headers = headers,
+                json = data
+            )
 
 
-        r = requests.post(
-            "http://" + self.deviceip + "/rest/login",
-            headers = headers,
-            json = data
+            _LOGGER.debug(r.text)
+            _LOGGER.debug(r.status_code)
+        # _LOGGER.debug(r.text)
+        # _LOGGER.debug(r.request.body)
+
+            if r.status_code == 200:
+                result = r.json()
+                self.sid = result["connect.sid"]
+                return True
+            if r.status_code == 404:
+                self.version = "old"
+                return False
+            else:
+                print("Status code failure")
+                login += 1
+        return False
+
+    def oldstatus(self):
+        # Function for returning information on old controllers (Currently not authenticated)
+        headers = {
+            **defaultHeaders
+        }
+
+        r = requests.get(
+            "http://" + self.deviceip + "/cgi-bin/status.xml?" + str(round(time.time())),
+            headers = headers
         )
+        xml = xmltodict.parse(r.text)
+        # Code to convert old style to new style json
+        result = {}
+        system = {}
+        system["software"] = xml["status"]["@software"]
+        system["hardware"] = xml["status"]["@hardware"]
 
-        print(r.text)
-        print(r.request.body)
-        print(r.status_code)
-       # _LOGGER.debug(r.text)
-       # _LOGGER.debug(r.request.body)
+        result["system"] = system
 
-        if r.status_code == 200:
-            result = r.json()
-            self.sid = result["connect.sid"]
-            return True
-        else:
-            print("Status code failure")
-            return False
+        inputs = []
+        for value in xml["status"]["probes"]["probe"]:
+            inputdata = {}
+            inputdata["did"] = "base_" + value["name"]
+            inputdata["name"] = value["name"]
+            inputdata["type"] = value["type"]
+            inputdata["value"] = value["value"]
+            inputs.append(inputdata)
+
+        result["inputs"] = inputs
+
+        outputs = []
+        for value in xml["status"]["outlets"]["outlet"]:
+            _LOGGER.debug(value)
+            outputdata = {}
+            outputdata["did"] = value["deviceID"]
+            outputdata["name"] = value["name"]
+            outputdata["status"] = [value["state"], "", "OK", ""]
+            outputdata["id"] = value["outputID"]
+            outputdata["type"] = "outlet"
+            outputs.append(outputdata)
+
+        
+        result["outputs"] = outputs
+
+        _LOGGER.debug(result)
+        return result
+
 
     def status(self):
         _LOGGER.debug(self.sid)
         if self.sid is None:
             _LOGGER.debug("We are none")
             self.auth()
+
+        if self.version == "old":
+            result = self.oldstatus()
+            return result
         headers = {
             **defaultHeaders,
             "Cookie" : "connect.sid=" + self.sid
