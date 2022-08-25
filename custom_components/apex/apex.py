@@ -55,7 +55,7 @@ class Apex(object):
                 return True
             if r.status_code == 404:
                 self.version = "old"
-                return False
+                return True
             else:
                 print("Status code failure")
                 login += 1
