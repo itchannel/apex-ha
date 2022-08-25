@@ -127,6 +127,10 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
                 data = await self._hass.async_add_executor_job(
                     self.apex.status  # Fetch new status
                 )
+
+                data["config"] = await self._hass.async_add_executor_job(
+                    self.apex.config  # Fetch new status
+                )
                 #_LOGGER.debug("Refreshing Now")
                 #_LOGGER.debug(data)
 

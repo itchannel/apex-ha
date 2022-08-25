@@ -86,7 +86,7 @@ class Switch(ApexEntity, SwitchEntity):
         if self.switch["type"] in SWITCHES:
             return SWITCHES[self.switch["type"]]["icon"]
         else:
-            _LOGGER.debug("Missing icon: " + self.sensor["type"])
+            _LOGGER.debug("Missing icon: " + self.switch["type"])
             return None
 
     @property

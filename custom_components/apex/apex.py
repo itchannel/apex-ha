@@ -77,7 +77,30 @@ class Apex(object):
         else:
             print("Error occured")
 
+    def config(self):
+        _LOGGER.debug(self.sid)
+        self.version = "old"
+        if self.version == "old":
+            result = self.oldstatus()
+        if self.sid is None:
+            _LOGGER.debug("We are none")
+            self.auth()
+        headers = {
+            **defaultHeaders,
+            "Cookie" : "connect.sid=" + self.sid
+        }
 
+        r = requests.get(
+            "http://" + self.deviceip + "/rest/config?_=" + str(round(time.time())),
+            headers = headers
+        )
+        #_LOGGER.debug(r.text)
+
+        if r.status_code == 200:
+            result = r.json()
+            return result
+        else:
+            print("Error occured")
 
     def toggle_output(self, did, state):
         headers = {

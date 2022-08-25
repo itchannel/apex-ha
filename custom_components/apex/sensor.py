@@ -5,7 +5,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, dt
 
 from . import ApexEntity
-from .const import DOMAIN, SENSORS
+from .const import DOMAIN, SENSORS, MEASUREMENTS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +75,11 @@ class ApexSensor(
 
     @property
     def unit_of_measurement(self):
+        for value in self.coordinator.data["config"]["iconf"]:
+            if value["did"] == self.sensor["did"]:
+                if "range" in value["extra"]:
+                    if value["extra"]["range"] in MEASUREMENTS:
+                        return MEASUREMENTS[value["extra"]["range"]]
         if self.sensor["type"] in SENSORS:
             if "measurement" in SENSORS[self.sensor["type"]]:
                 return SENSORS[self.sensor["type"]]["measurement"]

@@ -26,5 +26,10 @@ SENSORS = {
     "dos" : {"icon" : "mdi:pump", "measurement": "ml"}
 }
 
+MEASUREMENTS = {
+    "Celcius" : "°C",
+    "Faren": "°F"
+}
+
 UPDATE_INTERVAL = "update_interval"
 UPDATE_INTERVAL_DEFAULT = 60
