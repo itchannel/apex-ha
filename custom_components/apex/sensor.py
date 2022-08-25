@@ -47,6 +47,9 @@ class ApexSensor(
                 if value["did"] == self.sensor["did"]:
                     if self.sensor["type"] == "dos":
                         return value["status"][4]
+                    if self.sensor["type"] == "iotaPump|Sicce|Syncra":
+                        return value["status"][1]
+                    
         if ftype == "attributes":
             for value in self.coordinator.data["inputs"]:
                 if value["did"] == self.sensor["did"]:
@@ -54,6 +57,8 @@ class ApexSensor(
             for value in self.coordinator.data["outputs"]:
                 if value["did"] == self.sensor["did"]:
                     if self.sensor["type"] == "dos":
+                        return value
+                    if self.sensor["type"] == "iotaPump|Sicce|Syncra":
                         return value
             
     

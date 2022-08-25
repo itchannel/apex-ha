@@ -76,7 +76,7 @@ class Apex(object):
         result = {}
         system = {}
         system["software"] = xml["status"]["@software"]
-        system["hardware"] = xml["status"]["@hardware"]
+        system["hardware"] = xml["status"]["@hardware"] + "Legacy Version (Status.xml)"
 
         result["system"] = system
 
