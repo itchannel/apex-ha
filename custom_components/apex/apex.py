@@ -76,7 +76,7 @@ class Apex(object):
         result = {}
         system = {}
         system["software"] = xml["status"]["@software"]
-        system["hardware"] = xml["status"]["@hardware"] + "Legacy Version (Status.xml)"
+        system["hardware"] = xml["status"]["@hardware"] + " Legacy Version (Status.xml)"
 
         result["system"] = system
 
@@ -136,10 +136,9 @@ class Apex(object):
             print("Error occured")
 
     def config(self):
-        _LOGGER.debug(self.sid)
-        self.version = "old"
+
         if self.version == "old":
-            result = self.oldstatus()
+            result = {}
         if self.sid is None:
             _LOGGER.debug("We are none")
             self.auth()
