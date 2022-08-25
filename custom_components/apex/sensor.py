@@ -80,11 +80,12 @@ class ApexSensor(
 
     @property
     def unit_of_measurement(self):
-        for value in self.coordinator.data["config"]["iconf"]:
-            if value["did"] == self.sensor["did"]:
-                if "range" in value["extra"]:
-                    if value["extra"]["range"] in MEASUREMENTS:
-                        return MEASUREMENTS[value["extra"]["range"]]
+        if "iconf" in self.coordinator.data["config"]:
+            for value in self.coordinator.data["config"]["iconf"]:
+                if value["did"] == self.sensor["did"]:
+                    if "range" in value["extra"]:
+                        if value["extra"]["range"] in MEASUREMENTS:
+                            return MEASUREMENTS[value["extra"]["range"]]
         if self.sensor["type"] in SENSORS:
             if "measurement" in SENSORS[self.sensor["type"]]:
                 return SENSORS[self.sensor["type"]]["measurement"]
