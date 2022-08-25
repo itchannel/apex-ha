@@ -8,7 +8,9 @@ SWITCHES = {
     "variable": {"icon": "mdi:cog"},
     "afs": {"icon": "mdi:shaker"},
     "24v": {"icon": "mdi:home-lightning-bolt-outline"},
-    "dos": {"icon": "mdi:mdi:test-tube"}
+    "dos": {"icon": "mdi:test-tube"},
+    "virtual": {"icon": "mdi:monitor-account"},
+    "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump"}
     }
 
 SENSORS = {
@@ -23,7 +25,13 @@ SENSORS = {
     "alk" : {"icon" : "mdi:test-tube", "measurement": "dKh"},
     "ca" : {"icon" : "mdi:test-tube", "measurement": "ppm"},
     "mg" : {"icon" : "mdi:test-tube", "measurement": "ppm"}, 
-    "dos" : {"icon" : "mdi:pump", "measurement": "ml"}
+    "dos" : {"icon" : "mdi:pump", "measurement": "ml"},
+    "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump", "measurement": "%"}
+}
+
+MEASUREMENTS = {
+    "Celcius" : "°C",
+    "Faren": "°F"
 }
 
 UPDATE_INTERVAL = "update_interval"

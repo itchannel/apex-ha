@@ -10,6 +10,11 @@ Use HACS and add as a custom repo. Once the integration is installed go to your 
 - Password (Apex Controller Password)
 - Apex Controller IP Address
 
+## Older versions (Apex Jnr, Apex Classic)
+Older versions of the Apex controller don't support the rest API that's used by this integration. 
+
+I have added in limited support for these older devices using the old status.xml method, this will show the sensors and outputs on your device in HA but currently won't allow toggling switches or writing to the controller from HA
+
 ## Options
 You can set the update interval that the integration polls the controller (in seconds). Be aware you will need to reload the integration once updating options for this to take affect. 
 

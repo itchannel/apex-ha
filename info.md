@@ -1,4 +1,9 @@
 ## **Changelog**
+### Version 1.07
+- Change naming scheme for entities to start with apex_ **Breaking change: This will create duplicate entities as the naming scheme has changed and any existing automations will need to be updated to the new format**
+- Add retrieval of measurements from Apex config e.g. temp probes report correct Celcius or Fahrenheit
+- Add support for older Apex systems using status.xml (Currently read only, switches will not toggle as it's unauthenticated only)
+- Add support for device (iotaPump|Sicce|Syncra)
 ### Version 1.06
 - Change update interval to seconds instead of minutes as requested (Be aware quicker than 30 second polling can crash the controller)
 - Add DOS bottle levels to sensor data
