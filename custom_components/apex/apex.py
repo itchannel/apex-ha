@@ -207,11 +207,6 @@ class Apex(object):
         if variable == None:
             return {"error": "Variable/did not found"}
 
-        data = {
-            "did": did,
-            "prog": code,
-            "name": "test1"
-        }
 
         if variable["ctype"] != "Advanced":
             _LOGGER.debug("Only Advanced mode currently supported")
