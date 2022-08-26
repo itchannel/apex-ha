@@ -1,4 +1,6 @@
 ## **Changelog**
+## Version 1.09
+- Add set_variable service for setting programming code in variables e.g. "Set 75" 
 ## Version 1.08
 - Bug fix for config error on old status.xml file
 ### Version 1.07

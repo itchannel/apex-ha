@@ -166,6 +166,7 @@ class Apex(object):
             "Cookie" : "connect.sid=" + self.sid
         }
 
+
         data = {
             "did" : did, 
             "status": [
@@ -178,6 +179,7 @@ class Apex(object):
 
         }
 
+
         _LOGGER.debug(data)
 
         r = requests.put(
@@ -185,9 +187,48 @@ class Apex(object):
             headers = headers,
             json = data
         )
+        
         data = r.json()
         _LOGGER.debug(data)
         return data
+
+
+    def set_variable(self, did, code):
+        headers = {
+            **defaultHeaders,
+            "Cookie" : "connect.sid=" + self.sid
+        }
+        config = self.config()
+        variable = None
+        for value in config["oconf"]:
+            if value["did"] == did:
+                variable = value
+        
+        if variable == None:
+            return {"error": "Variable/did not found"}
+
+        data = {
+            "did": did,
+            "prog": code,
+            "name": "test1"
+        }
+
+        if variable["ctype"] != "Advanced":
+            _LOGGER.debug("Only Advanced mode currently supported")
+            return {"error": "Given variable was not of type Advanced"}
+
+        variable["prog"] = code
+
+        r = requests.put(
+            "http://" + self.deviceip + "/rest/config/oconf/" + did, 
+            headers = headers,
+            json = variable
+        )
+        _LOGGER.debug(variable)
+
+        _LOGGER.debug(r.text)
+
+        return {"error": ""}
 
 
 
