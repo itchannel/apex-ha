@@ -109,7 +109,7 @@ class Apex(object):
         return result
 
 
-   def status(self):
+    def status(self):
         _LOGGER.debug(self.sid)
         if self.sid is None:
             _LOGGER.debug("We are none")
