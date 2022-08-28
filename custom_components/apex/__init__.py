@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -70,10 +70,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_set_options_service(service_call):
         await hass.async_add_executor_job(set_output, hass, service_call, coordinator)
 
+    async def async_set_variable_service(service_call):
+        await hass.async_add_executor_job(set_variable, hass, service_call, coordinator)
+
     hass.services.async_register(
         DOMAIN,
         "set_output", 
         async_set_options_service
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        "set_variable", 
+        async_set_variable_service
     )
 
 
@@ -85,6 +94,13 @@ def set_output(hass, service, coordinator):
     did = service.data.get("did").strip()
     setting = service.data.get("setting").strip()
     status = coordinator.apex.toggle_output(did, setting)
+
+def set_variable(hass, service, coordinator):
+    did = service.data.get("did").strip()
+    code = service.data.get("code")
+    status = coordinator.apex.set_variable(did, code)
+    if status["error"] != "":
+        raise HomeAssistantError(status["error"])
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):

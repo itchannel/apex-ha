@@ -1,4 +1,8 @@
 ## **Changelog**
+## Version 1.09
+
+- Add set_variable service for setting programming code in variables e.g. "Set 75" 
+- Fix cookie expiry bug
 
 ## Version 1.08
 

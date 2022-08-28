@@ -16,3 +16,18 @@ set_output:
             - "OFF"
             - "ON"
             - "AUTO"
+set_variable:
+  description: "Ability to program variables on the controller e.g. Set 75 (Only Advanced mode variables supported currently!!"
+  fields:
+    did:
+      name: DID
+      description: "DID of the selected variable or output to modify"
+      example: "Cntl_A1"
+      selector: 
+        text:
+    code:
+      name: Code
+      description: "Code to modify on the variable/output"
+      example: "Set 75"
+      selector:
+        text:

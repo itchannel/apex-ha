@@ -118,22 +118,27 @@ class Apex(object):
         if self.version == "old":
             result = self.oldstatus()
             return result
-        headers = {
-            **defaultHeaders,
-            "Cookie" : "connect.sid=" + self.sid
-        }
+        i = 0
+        while i <= 3:
+            headers = {
+                **defaultHeaders,
+                "Cookie" : "connect.sid=" + self.sid
+            }
+            r = requests.get(
+                "http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())),
+                headers = headers
+            )
+            #_LOGGER.debug(r.text)
 
-        r = requests.get(
-            "http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())),
-            headers = headers
-        )
-        #_LOGGER.debug(r.text)
-
-        if r.status_code == 200:
-            result = r.json()
-            return result
-        else:
-            print("Error occured")
+            if r.status_code == 200:
+                result = r.json()
+                return result
+            elif r.status_code == 401:
+                self.auth()
+            else:
+                _LOGGER.debug("Unknown error occurred")
+                return {}
+            i += 1
 
     def config(self):
 
@@ -166,6 +171,7 @@ class Apex(object):
             "Cookie" : "connect.sid=" + self.sid
         }
 
+
         data = {
             "did" : did, 
             "status": [
@@ -178,6 +184,7 @@ class Apex(object):
 
         }
 
+
         _LOGGER.debug(data)
 
         r = requests.put(
@@ -185,9 +192,43 @@ class Apex(object):
             headers = headers,
             json = data
         )
+        
         data = r.json()
         _LOGGER.debug(data)
         return data
+
+
+    def set_variable(self, did, code):
+        headers = {
+            **defaultHeaders,
+            "Cookie" : "connect.sid=" + self.sid
+        }
+        config = self.config()
+        variable = None
+        for value in config["oconf"]:
+            if value["did"] == did:
+                variable = value
+        
+        if variable == None:
+            return {"error": "Variable/did not found"}
+
+
+        if variable["ctype"] != "Advanced":
+            _LOGGER.debug("Only Advanced mode currently supported")
+            return {"error": "Given variable was not of type Advanced"}
+
+        variable["prog"] = code
+
+        r = requests.put(
+            "http://" + self.deviceip + "/rest/config/oconf/" + did, 
+            headers = headers,
+            json = variable
+        )
+        _LOGGER.debug(variable)
+
+        _LOGGER.debug(r.text)
+
+        return {"error": ""}
 
 
 
