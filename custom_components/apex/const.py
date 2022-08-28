@@ -26,7 +26,9 @@ SENSORS = {
     "ca" : {"icon" : "mdi:test-tube", "measurement": "ppm"},
     "mg" : {"icon" : "mdi:test-tube", "measurement": "ppm"}, 
     "dos" : {"icon" : "mdi:pump", "measurement": "ml"},
-    "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump", "measurement": "%"}
+    "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump", "measurement": "%"},
+    "variable" : {"icon" : "mdi:cog-outline"},
+    "virtual" : {"icon" : "mdi:cog-outline"},
 }
 
 MEASUREMENTS = {

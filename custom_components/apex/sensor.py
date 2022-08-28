@@ -1,4 +1,5 @@
 import logging
+import re
 from datetime import datetime, timedelta
 
 from homeassistant.helpers.entity import Entity
@@ -18,7 +19,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor = ApexSensor(entry, value, config_entry.options)
         async_add_entities([sensor], True)
     for value in entry.data["outputs"]:
-        if value["type"] == "dos":
+        if value["type"] == "dos" or value["type"] == "variable" or value["type"] == "virtual":
             sensor = ApexSensor(entry, value, config_entry.options)
             async_add_entities([sensor], True)
 
@@ -49,6 +50,14 @@ class ApexSensor(
                         return value["status"][4]
                     if self.sensor["type"] == "iotaPump|Sicce|Syncra":
                         return value["status"][1]
+                    if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
+                        if "config" in self.coordinator.data:
+                            for config in self.coordinator.data["config"]["oconf"]:
+                                if config["did"] == self.sensor["did"]:
+                                    if config["ctype"] == "Advanced":
+                                        return self.process_prog(config["prog"])
+                                    else:
+                                        return "Not an Advanced variable!"
                     
         if ftype == "attributes":
             for value in self.coordinator.data["inputs"]:
@@ -60,7 +69,23 @@ class ApexSensor(
                         return value
                     if self.sensor["type"] == "iotaPump|Sicce|Syncra":
                         return value
-            
+                    if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
+                        if "config" in self.coordinator.data:
+                            for config in self.coordinator.data["config"]["oconf"]:
+                                if config["did"] == self.sensor["did"]: 
+                                    return config
+                        else:
+                            return value
+    
+    def process_prog(self, prog):
+        if "Set PF" in prog:
+            return prog
+        test = re.findall("Set\s[^\d]*(\d+)", prog)
+        if test:
+            _LOGGER.debug(test[0])
+            return int(test[0])
+        else:
+            return prog     
     
     @property
     def name(self):

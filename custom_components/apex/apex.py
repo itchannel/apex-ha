@@ -109,7 +109,7 @@ class Apex(object):
         return result
 
 
-    def status(self):
+   def status(self):
         _LOGGER.debug(self.sid)
         if self.sid is None:
             _LOGGER.debug("We are none")
@@ -118,22 +118,27 @@ class Apex(object):
         if self.version == "old":
             result = self.oldstatus()
             return result
-        headers = {
-            **defaultHeaders,
-            "Cookie" : "connect.sid=" + self.sid
-        }
+        i = 0
+        while i <= 3:
+            headers = {
+                **defaultHeaders,
+                "Cookie" : "connect.sid=" + self.sid
+            }
+            r = requests.get(
+                "http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())),
+                headers = headers
+            )
+            #_LOGGER.debug(r.text)
 
-        r = requests.get(
-            "http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())),
-            headers = headers
-        )
-        #_LOGGER.debug(r.text)
-
-        if r.status_code == 200:
-            result = r.json()
-            return result
-        else:
-            print("Error occured")
+            if r.status_code == 200:
+                result = r.json()
+                return result
+            elif r.status_code == 401:
+                self.auth()
+            else:
+                _LOGGER.debug("Unknown error occurred")
+                return {}
+            i += 1
 
     def config(self):
 
