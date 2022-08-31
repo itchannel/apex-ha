@@ -213,10 +213,13 @@ class Apex(object):
             return {"error": "Variable/did not found"}
 
 
-        if variable["ctype"] != "Advanced":
-            _LOGGER.debug("Only Advanced mode currently supported")
-            return {"error": "Given variable was not of type Advanced"}
+        # I don't think it's necessary to warn on this, that just forces me to go to the Apex
+        # interface and set it...
+        # if variable["ctype"] != "Advanced":
+        #     _LOGGER.debug("Only Advanced mode currently supported")
+        #     return {"error": "Given variable was not of type Advanced"}
 
+        variable["ctype"] = "Advanced"
         variable["prog"] = code
 
         r = requests.put(
