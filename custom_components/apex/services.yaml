@@ -23,11 +23,26 @@ set_variable:
       name: DID
       description: "DID of the selected variable or output to modify"
       example: "Cntl_A1"
-      selector: 
+      selector:
         text:
     code:
       name: Code
       description: "Code to modify on the variable/output"
       example: "Set 75"
+      selector:
+        text:
+set_dos_rate:
+  description: "Set the dosing rate profile"
+  fields:
+    pid:
+      name: PID
+      description: "ID of the DOS profile"
+      example: 1
+      selector:
+        text:
+    rate:
+      name: Rate
+      description: "The desired dosing rate, in mL / min. (0.1 - 250)"
+      example: 1.2
       selector:
         text:

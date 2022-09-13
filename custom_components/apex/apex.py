@@ -174,23 +174,19 @@ class Apex(object):
 
         return {"error": ""}
 
-    def update_dos_profile(self, profile_id, target_rate):
+    def set_dos_rate(self, profile_id, rate):
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         config = self.config()
         profile = config["pconf"][profile_id - 1]
         if int(profile["ID"]) != profile_id:
             return {"error": "Profile index mismatch"}
 
-        # the DOS profile is a pump speed, forward/reverse, target amount, over a time period, and dose count
-        # "data": {"mode": 21, "count": 255, "time": 60, "amount": 1}
-        # the mode is 4 bits for the speed, and always forward (you can't calibrate the reverse, so why bother?)
-        # pump speed is given by ["250 mL / min", "125 mL / min", "60 mL / min", "25 mL / min", "12 mL / min", "7 mL / min"]
-
         # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
         # then find the slowest pump speed possible to manage sound levels.
+        # XXX TODO handle rates less than 0.1ml/min by dosing over multiple minutes? Is this necessary?
         pump_speeds = [250, 125, 60, 25, 12, 7]
-        target_rate = int(target_rate * 10) / 10.0
-        target_pump_speed = min(target_rate * 3, pump_speeds[0])
+        rate = int(rate * 10) / 10.0
+        target_pump_speed = min(rate * 3, pump_speeds[0])
         pump_speed_index = len(pump_speeds) - 1
         while pump_speeds[pump_speed_index] < target_pump_speed:
             pump_speed_index -= 1
@@ -200,7 +196,9 @@ class Apex(object):
         # the Apex dashboard
         mode = pump_speed_index + 16
 
-        profile["data"] = {"mode": mode, "count": 255, "time": 60, "amount": target_rate}
+        # the DOS profile is the mode, target amount, target time period (one minute), and dose count
+        # "data": {"mode": 21, "amount": 1, "time": 60, "count": 255}
+        profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
         _LOGGER.debug(profile)
 
         #r = requests.put("http://" + self.deviceip + "/rest/config/pconf/" + profile_id, headers=headers, json=profile)
