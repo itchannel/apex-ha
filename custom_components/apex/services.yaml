@@ -40,9 +40,9 @@ set_dos_rate:
       example: "4_1"
       selector:
         text:
-    pid:
+    profile_id:
       name: Profile ID
-      description: "Profile ID assign to the DOS pump, the integration will name it appropriately"
+      description: "Profile ID to assign to the DOS pump, the integration will rename it appropriately."
       example: 11
       selector:
         text:

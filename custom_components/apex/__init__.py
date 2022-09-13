@@ -110,7 +110,7 @@ def set_variable(hass, service, coordinator):
 
 def set_dos_rate(hass, service, coordinator):
     did = service.data.get("did").strip()
-    profile_id = int(service.data.get("pid"))
+    profile_id = int(service.data.get("profile_id"))
     rate = float(service.data.get("rate"))
     status = coordinator.apex.set_dos_rate(did, profile_id, rate)
     if status["error"] != "":
