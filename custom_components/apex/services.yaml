@@ -42,7 +42,7 @@ set_dos_rate:
         text:
     rate:
       name: Rate
-      description: "The desired dosing rate, in mL / min. (effective range is 0.1 - 83)"
+      description: "The desired dosing rate, in mL / min. (effective range is 0.1 - 125)"
       example: 1.2
       selector:
         text:

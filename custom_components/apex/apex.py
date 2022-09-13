@@ -176,11 +176,14 @@ class Apex(object):
             return {"error": "Profile index mismatch"}
 
         # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
-        # then find the slowest pump speed possible to manage sound levels.
+        # then find the slowest pump speed possible to manage sound levels. Neptune uses a 3x safety
+        # margin to extend the life of the pump, but the setting only appears to be enforced in the
+        # Fusion UI. We use a 2x margin because we can.
         pump_speeds = [250, 125, 60, 25, 12, 7]
         rate = int(rate * 10) / 10.0
-        if int(pump_speeds[0] / 3) > rate > 0.1:
-            target_pump_speed = rate * 3
+        safety_margin = 2
+        if int(pump_speeds[0] / safety_margin) > rate > 0.1:
+            target_pump_speed = rate * safety_margin
             pump_speed_index = len(pump_speeds) - 1
             while pump_speeds[pump_speed_index] < target_pump_speed:
                 pump_speed_index -= 1
