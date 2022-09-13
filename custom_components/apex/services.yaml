@@ -32,17 +32,23 @@ set_variable:
       selector:
         text:
 set_dos_rate:
-  description: "Set the dosing rate profile"
+  description: "Set the dosing rate for a DOS pump"
   fields:
+    did:
+      name: DID
+      description: "DID of the DOS pump"
+      example: "4_1"
+      selector:
+        text:
     pid:
-      name: PID
-      description: "ID of the DOS profile"
-      example: 1
+      name: Profile ID
+      description: "Profile ID assign to the DOS pump, the integration will name it appropriately"
+      example: 11
       selector:
         text:
     rate:
       name: Rate
-      description: "The desired dosing rate, in mL / min. (effective range is 0.1 - 125)"
+      description: "The desired dosing rate, in mL / min. (effective range is 0 - 125)"
       example: 1.2
       selector:
         text:

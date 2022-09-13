@@ -109,9 +109,10 @@ def set_variable(hass, service, coordinator):
 
 
 def set_dos_rate(hass, service, coordinator):
-    pid = int(service.data.get("pid"))
+    did = service.data.get("did").strip()
+    profile_id = int(service.data.get("pid"))
     rate = float(service.data.get("rate"))
-    status = coordinator.apex.set_dos_rate(pid, rate)
+    status = coordinator.apex.set_dos_rate(did, profile_id, rate)
     if status["error"] != "":
         raise HomeAssistantError(status["error"])
 

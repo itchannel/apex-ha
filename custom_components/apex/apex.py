@@ -168,40 +168,55 @@ class Apex(object):
 
         return {"error": ""}
 
-    def set_dos_rate(self, profile_id, rate):
+    def set_dos_rate(self, did, profile_id, rate):
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         config = self.config()
+
         profile = config["pconf"][profile_id - 1]
         if int(profile["ID"]) != profile_id:
             return {"error": "Profile index mismatch"}
 
-        # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
-        # then find the slowest pump speed possible to manage sound levels. Neptune uses a 3x safety
-        # margin to extend the life of the pump, but the setting only appears to be enforced in the
-        # Fusion UI. We use a 2x margin because we can.
-        pump_speeds = [250, 125, 60, 25, 12, 7]
-        rate = int(rate * 10) / 10.0
-        safety_margin = 2
-        if int(pump_speeds[0] / safety_margin) > rate > 0.1:
-            target_pump_speed = rate * safety_margin
-            pump_speed_index = len(pump_speeds) - 1
-            while pump_speeds[pump_speed_index] < target_pump_speed:
-                pump_speed_index -= 1
+        min_rate = 0.1
+        if rate > min_rate:
+            # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
+            # then find the slowest pump speed possible to manage sound levels. Neptune uses a 3x
+            # safety margin to extend the life of the pump, but the setting only appears to be
+            # enforced in the Fusion UI. We use a 2x margin because we can.
+            pump_speeds = [250, 125, 60, 25, 12, 7]
+            safety_margin = 2
+            rate = int(rate * 10) / 10.0
+            if int(pump_speeds[0] / safety_margin) >= rate:
+                target_pump_speed = rate * safety_margin
+                pump_speed_index = len(pump_speeds) - 1
+                while pump_speeds[pump_speed_index] < target_pump_speed:
+                    pump_speed_index -= 1
 
-            # bits 0-4 of the 'mode' value are the pump speed index, and bit 5 specifies 'forward' or
-            # 'reverse'. we always use 'forward' because you can't calibrate the reverse direction using
-            # the Apex dashboard
-            mode = pump_speed_index + 16
+                # bits 0-4 of the 'mode' value are the pump speed index, and bit 5 specifies
+                # 'forward' or 'reverse'. we always use 'forward' because you can't calibrate the
+                # reverse direction using the Apex dashboard
+                mode = pump_speed_index + 16
 
-            # the DOS profile is the mode, target amount, target time period (one minute), and dose count
-            # "data": {"mode": 21, "amount": 1, "time": 60, "count": 255}
-            profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
-            _LOGGER.debug(profile)
+                # we set the profile to be what we need it to be so the user doesn't have to do
+                # anything except choose the profile to use
+                profile["type"] = "dose"
+                profile["name"] = f"Dose_{did}"
 
-            r = requests.put(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", headers=headers, json=profile)
-            # _LOGGER.debug(r.text)
+                # the DOS profile is the mode, target amount, target time period (one minute), and
+                # dose count
+                profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
+                _LOGGER.debug(profile)
 
-            return {"error": ""}
+                r = requests.put(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", headers=headers, json=profile)
+                # _LOGGER.debug(r.text)
 
-        # XXX TODO handle rates less than 0.1ml/min by dosing over multiple minutes? Is this necessary?
-        return {"error": f"Requested rate ({rate} mL / min) is out of the supported range [0.1 .. {int(pump_speeds[0] / 3)}]."}
+                # turn the pump on
+                self.set_variable(did, f"Set {profile['name']}")
+
+                # return no error
+                return {"error": ""}
+
+            # XXX TODO handle rates less than 0.1ml/min by dosing over multiple minutes? Is this necessary?
+            return {"error": f"Requested rate ({rate} mL / min) is out of the supported range [0.1 .. {int(pump_speeds[0] / 3)}]."}
+        else:
+            # turn the pump off
+            self.set_variable(did, f"Set OFF")
