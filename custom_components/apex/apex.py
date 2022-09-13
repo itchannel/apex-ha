@@ -195,7 +195,7 @@ class Apex(object):
             profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
             _LOGGER.debug(profile)
 
-            r = requests.put("http://" + self.deviceip + "/rest/config/pconf/" + profile_id, headers=headers, json=profile)
+            r = requests.put(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", headers=headers, json=profile)
             # _LOGGER.debug(r.text)
 
             return {"error": ""}
