@@ -26,32 +26,18 @@ class Apex(object):
 
 
     def auth(self):
-        headers = {
-            **defaultHeaders
-        }
-        data = {
-            "login" : self.username, 
-            "password": self.password, 
-            "remember_me" : False
-        }
+        headers = {**defaultHeaders}
+        data = {"login" : self.username, "password": self.password, "remember_me" : False}
         # Try logging in 3 times due to controller timeout
         login = 0
         while login < 3:
-            r = requests.post(
-                "http://" + self.deviceip + "/rest/login",
-                headers = headers,
-                json = data
-            )
-
-
-            _LOGGER.debug(r.text)
+            r = requests.post("http://" + self.deviceip + "/rest/login", headers = headers, json = data)
+            # _LOGGER.debug(r.request.body)
             _LOGGER.debug(r.status_code)
-        # _LOGGER.debug(r.text)
-        # _LOGGER.debug(r.request.body)
+            _LOGGER.debug(r.text)
 
             if r.status_code == 200:
-                result = r.json()
-                self.sid = result["connect.sid"]
+                self.sid = r.json()["connect.sid"]
                 return True
             if r.status_code == 404:
                 self.version = "old"
@@ -59,18 +45,16 @@ class Apex(object):
             else:
                 print("Status code failure")
                 login += 1
+
+            # XXX does there need to be some sort of sleep here?
+
         return False
 
     def oldstatus(self):
         # Function for returning information on old controllers (Currently not authenticated)
-        headers = {
-            **defaultHeaders
-        }
+        headers = {**defaultHeaders}
 
-        r = requests.get(
-            "http://" + self.deviceip + "/cgi-bin/status.xml?" + str(round(time.time())),
-            headers = headers
-        )
+        r = requests.get("http://" + self.deviceip + "/cgi-bin/status.xml?" + str(round(time.time())), headers = headers)
         xml = xmltodict.parse(r.text)
         # Code to convert old style to new style json
         result = {}
@@ -120,19 +104,12 @@ class Apex(object):
             return result
         i = 0
         while i <= 3:
-            headers = {
-                **defaultHeaders,
-                "Cookie" : "connect.sid=" + self.sid
-            }
-            r = requests.get(
-                "http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())),
-                headers = headers
-            )
+            headers = {**defaultHeaders, "Cookie" : "connect.sid=" + self.sid}
+            r = requests.get("http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())), headers = headers)
             #_LOGGER.debug(r.text)
 
             if r.status_code == 200:
-                result = r.json()
-                return result
+                return r.json()
             elif r.status_code == 401:
                 self.auth()
             else:
@@ -148,70 +125,39 @@ class Apex(object):
         if self.sid is None:
             _LOGGER.debug("We are none")
             self.auth()
-        headers = {
-            **defaultHeaders,
-            "Cookie" : "connect.sid=" + self.sid
-        }
+        headers = {**defaultHeaders, "Cookie" : "connect.sid=" + self.sid }
 
-        r = requests.get(
-            "http://" + self.deviceip + "/rest/config?_=" + str(round(time.time())),
-            headers = headers
-        )
+        r = requests.get( "http://" + self.deviceip + "/rest/config?_=" + str(round(time.time())), headers = headers)
         #_LOGGER.debug(r.text)
 
         if r.status_code == 200:
-            result = r.json()
-            return result
+            return r.json()
         else:
             print("Error occured")
 
     def toggle_output(self, did, state):
-        headers = {
-            **defaultHeaders,
-            "Cookie" : "connect.sid=" + self.sid
-        }
+        headers = {**defaultHeaders, "Cookie" : "connect.sid=" + self.sid}
 
-
-        data = {
-            "did" : did, 
-            "status": [
-                state, 
-                "", 
-                "OK", 
-                ""
-            ],
-            "type": "outlet"
-
-        }
-
-
+        # I gave this "type": "outlet" a bit of side-eye, but it seems to be fine even if the
+        # target is not technically an outlet.
+        data = {"did" : did, "status": [state, "", "OK", ""], "type": "outlet"}
         _LOGGER.debug(data)
 
-        r = requests.put(
-            "http://" + self.deviceip + "/rest/status/outputs/" + did, 
-            headers = headers,
-            json = data
-        )
-        
+        r = requests.put("http://" + self.deviceip + "/rest/status/outputs/" + did, headers = headers, json = data)
         data = r.json()
         _LOGGER.debug(data)
         return data
 
-
     def set_variable(self, did, code):
-        headers = {
-            **defaultHeaders,
-            "Cookie" : "connect.sid=" + self.sid
-        }
+        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         config = self.config()
         variable = None
         for value in config["oconf"]:
             if value["did"] == did:
                 variable = value
-        
+
         if variable == None:
             return {"error": "Variable/did not found"}
-
 
         # I don't think it's necessary to warn on this, that just forces me to go to the Apex
         # interface and set it...
@@ -221,17 +167,44 @@ class Apex(object):
 
         variable["ctype"] = "Advanced"
         variable["prog"] = code
-
-        r = requests.put(
-            "http://" + self.deviceip + "/rest/config/oconf/" + did, 
-            headers = headers,
-            json = variable
-        )
         _LOGGER.debug(variable)
 
+        r = requests.put("http://" + self.deviceip + "/rest/config/oconf/" + did, headers=headers, json=variable)
         _LOGGER.debug(r.text)
 
         return {"error": ""}
 
+    def update_dos_profile(self, profile_id, target_rate):
+        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
+        config = self.config()
+        profile = config["pconf"][profile_id - 1]
+        if int(profile["ID"]) != profile_id:
+            return {"error": "Profile index mismatch"}
 
+        # the DOS profile is a pump speed, forward/reverse, target amount, over a time period, and dose count
+        # "data": {"mode": 21, "count": 255, "time": 60, "amount": 1}
+        # the mode is 4 bits for the speed, and always forward (you can't calibrate the reverse, so why bother?)
+        # pump speed is given by ["250 mL / min", "125 mL / min", "60 mL / min", "25 mL / min", "12 mL / min", "7 mL / min"]
+
+        # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
+        # then find the slowest pump speed possible to manage sound levels.
+        pump_speeds = [250, 125, 60, 25, 12, 7]
+        target_rate = int(target_rate * 10) / 10.0
+        target_pump_speed = min(target_rate * 3, pump_speeds[0])
+        pump_speed_index = len(pump_speeds) - 1
+        while pump_speeds[pump_speed_index] < target_pump_speed:
+            pump_speed_index -= 1
+
+        # bits 0-4 of the 'mode' value are the pump speed index, and bit 5 specifies 'forward' or
+        # 'reverse'. we always use 'forward' because you can't calibrate the reverse direction using
+        # the Apex dashboard
+        mode = pump_speed_index + 16
+
+        profile["data"] = {"mode": mode, "count": 255, "time": 60, "amount": target_rate}
+        _LOGGER.debug(profile)
+
+        #r = requests.put("http://" + self.deviceip + "/rest/config/pconf/" + profile_id, headers=headers, json=profile)
+        #_LOGGER.debug(r.text)
+
+        return {"error": ""}
 
