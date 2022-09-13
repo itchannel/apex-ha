@@ -210,13 +210,11 @@ class Apex(object):
                 # _LOGGER.debug(r.text)
 
                 # turn the pump on
-                self.set_variable(did, f"Set {profile['name']}")
-
-                # return no error
-                return {"error": ""}
-
-            # XXX TODO handle rates less than 0.1ml/min by dosing over multiple minutes? Is this necessary?
-            return {"error": f"Requested rate ({rate} mL / min) is out of the supported range [0.1 .. {int(pump_speeds[0] / 3)}]."}
+                return self.set_variable(did, f"Set {profile['name']}")
+            else:
+                return {"error": f"Requested rate ({rate} mL / min) exceeds the supported range (limit {int(pump_speeds[0] / safety_margin)} mL / min)."}
         else:
+            # XXX TODO handle 0 < rate < 0.1ml/min by dosing over multiple minutes? Is this necessary?
+
             # turn the pump off
-            self.set_variable(did, f"Set OFF")
+            return self.set_variable(did, f"Set OFF")
