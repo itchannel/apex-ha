@@ -1,9 +1,7 @@
-import json
 import logging
 import requests
 import time
 import xmltodict
-
 
 defaultHeaders = {
     "Accept": "*/*",
@@ -12,9 +10,10 @@ defaultHeaders = {
 
 _LOGGER = logging.getLogger(__name__)
 
+
 class Apex(object):
     def __init__(
-        self, username, password, deviceip
+            self, username, password, deviceip
     ):
 
         self.username = username
@@ -23,15 +22,13 @@ class Apex(object):
         self.sid = None
         self.version = "new"
 
-
-
     def auth(self):
         headers = {**defaultHeaders}
-        data = {"login" : self.username, "password": self.password, "remember_me" : False}
+        data = {"login": self.username, "password": self.password, "remember_me": False}
         # Try logging in 3 times due to controller timeout
         login = 0
         while login < 3:
-            r = requests.post("http://" + self.deviceip + "/rest/login", headers = headers, json = data)
+            r = requests.post("http://" + self.deviceip + "/rest/login", headers=headers, json=data)
             # _LOGGER.debug(r.request.body)
             _LOGGER.debug(r.status_code)
             _LOGGER.debug(r.text)
@@ -54,7 +51,7 @@ class Apex(object):
         # Function for returning information on old controllers (Currently not authenticated)
         headers = {**defaultHeaders}
 
-        r = requests.get("http://" + self.deviceip + "/cgi-bin/status.xml?" + str(round(time.time())), headers = headers)
+        r = requests.get("http://" + self.deviceip + "/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
         xml = xmltodict.parse(r.text)
         # Code to convert old style to new style json
         result = {}
@@ -86,12 +83,10 @@ class Apex(object):
             outputdata["type"] = "outlet"
             outputs.append(outputdata)
 
-        
         result["outputs"] = outputs
 
         _LOGGER.debug(result)
         return result
-
 
     def status(self):
         _LOGGER.debug(self.sid)
@@ -104,9 +99,9 @@ class Apex(object):
             return result
         i = 0
         while i <= 3:
-            headers = {**defaultHeaders, "Cookie" : "connect.sid=" + self.sid}
-            r = requests.get("http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())), headers = headers)
-            #_LOGGER.debug(r.text)
+            headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
+            r = requests.get("http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())), headers=headers)
+            # _LOGGER.debug(r.text)
 
             if r.status_code == 200:
                 return r.json()
@@ -118,17 +113,16 @@ class Apex(object):
             i += 1
 
     def config(self):
-
         if self.version == "old":
             result = {}
             return result
         if self.sid is None:
             _LOGGER.debug("We are none")
             self.auth()
-        headers = {**defaultHeaders, "Cookie" : "connect.sid=" + self.sid }
+        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
 
-        r = requests.get( "http://" + self.deviceip + "/rest/config?_=" + str(round(time.time())), headers = headers)
-        #_LOGGER.debug(r.text)
+        r = requests.get("http://" + self.deviceip + "/rest/config?_=" + str(round(time.time())), headers=headers)
+        # _LOGGER.debug(r.text)
 
         if r.status_code == 200:
             return r.json()
@@ -136,14 +130,14 @@ class Apex(object):
             print("Error occured")
 
     def toggle_output(self, did, state):
-        headers = {**defaultHeaders, "Cookie" : "connect.sid=" + self.sid}
+        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
 
         # I gave this "type": "outlet" a bit of side-eye, but it seems to be fine even if the
         # target is not technically an outlet.
-        data = {"did" : did, "status": [state, "", "OK", ""], "type": "outlet"}
+        data = {"did": did, "status": [state, "", "OK", ""], "type": "outlet"}
         _LOGGER.debug(data)
 
-        r = requests.put("http://" + self.deviceip + "/rest/status/outputs/" + did, headers = headers, json = data)
+        r = requests.put("http://" + self.deviceip + "/rest/status/outputs/" + did, headers=headers, json=data)
         data = r.json()
         _LOGGER.debug(data)
         return data
@@ -156,7 +150,7 @@ class Apex(object):
             if value["did"] == did:
                 variable = value
 
-        if variable == None:
+        if variable is None:
             return {"error": "Variable/did not found"}
 
         # I don't think it's necessary to warn on this, that just forces me to go to the Apex
@@ -183,26 +177,28 @@ class Apex(object):
 
         # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
         # then find the slowest pump speed possible to manage sound levels.
-        # XXX TODO handle rates less than 0.1ml/min by dosing over multiple minutes? Is this necessary?
         pump_speeds = [250, 125, 60, 25, 12, 7]
         rate = int(rate * 10) / 10.0
-        target_pump_speed = min(rate * 3, pump_speeds[0])
-        pump_speed_index = len(pump_speeds) - 1
-        while pump_speeds[pump_speed_index] < target_pump_speed:
-            pump_speed_index -= 1
+        if int(pump_speeds[0] / 3) > rate > 0.1:
+            target_pump_speed = rate * 3
+            pump_speed_index = len(pump_speeds) - 1
+            while pump_speeds[pump_speed_index] < target_pump_speed:
+                pump_speed_index -= 1
 
-        # bits 0-4 of the 'mode' value are the pump speed index, and bit 5 specifies 'forward' or
-        # 'reverse'. we always use 'forward' because you can't calibrate the reverse direction using
-        # the Apex dashboard
-        mode = pump_speed_index + 16
+            # bits 0-4 of the 'mode' value are the pump speed index, and bit 5 specifies 'forward' or
+            # 'reverse'. we always use 'forward' because you can't calibrate the reverse direction using
+            # the Apex dashboard
+            mode = pump_speed_index + 16
 
-        # the DOS profile is the mode, target amount, target time period (one minute), and dose count
-        # "data": {"mode": 21, "amount": 1, "time": 60, "count": 255}
-        profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
-        _LOGGER.debug(profile)
+            # the DOS profile is the mode, target amount, target time period (one minute), and dose count
+            # "data": {"mode": 21, "amount": 1, "time": 60, "count": 255}
+            profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
+            _LOGGER.debug(profile)
 
-        #r = requests.put("http://" + self.deviceip + "/rest/config/pconf/" + profile_id, headers=headers, json=profile)
-        #_LOGGER.debug(r.text)
+            r = requests.put("http://" + self.deviceip + "/rest/config/pconf/" + profile_id, headers=headers, json=profile)
+            # _LOGGER.debug(r.text)
 
-        return {"error": ""}
+            return {"error": ""}
 
+        # XXX TODO handle rates less than 0.1ml/min by dosing over multiple minutes? Is this necessary?
+        return {"error": f"Requested rate ({rate} mL / min) is out of the supported range [0.1 .. {int(pump_speeds[0] / 3)}]."}
