@@ -178,7 +178,9 @@ class Apex(object):
 
         # turn the pump off to start - this will enable a new profile setting to start immediately
         # without it, the DOS will wait until the current profile period expires
-        return self.set_variable(did, f"Set OFF")
+        off = self.set_variable(did, f"Set OFF")
+        if off["error"] != "":
+            return off
 
         # check if the requested rate is greater than the OFF threshold
         min_rate = 0.1
