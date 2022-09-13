@@ -176,6 +176,11 @@ class Apex(object):
         if int(profile["ID"]) != profile_id:
             return {"error": "Profile index mismatch"}
 
+        # turn the pump off to start - this will enable a new profile setting to start immediately
+        # without it, the DOS will wait until the current profile period expires
+        return self.set_variable(did, f"Set OFF")
+
+        # check if the requested rate is greater than the OFF threshold
         min_rate = 0.1
         if rate > min_rate:
             # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
@@ -215,6 +220,4 @@ class Apex(object):
                 return {"error": f"Requested rate ({rate} mL / min) exceeds the supported range (limit {int(pump_speeds[0] / safety_margin)} mL / min)."}
         else:
             # XXX TODO handle 0 < rate < 0.1ml/min by dosing over multiple minutes? Is this necessary?
-
-            # turn the pump off
-            return self.set_variable(did, f"Set OFF")
+            return {"error": ""}
