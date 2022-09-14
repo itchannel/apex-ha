@@ -30,23 +30,15 @@ class Switch(ApexEntity, SwitchEntity):
         self.coordinator_context = object()
 
     async def async_turn_on(self, **kwargs):
-        update = await self.coordinator.hass.async_add_executor_job(
-            self.coordinator.apex.set_output,
-            self.switch["did"],
-            "AUTO"
-        )
-        if update["status"][0] == "ON" or update["status"][0] == "AON" or update["status"][0] == "AOF":
+        update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output, self.switch["did"], "AUTO")
+        if update["status"][0] != "OFF":
             self._state = True
             self.switch["status"] = update["status"]
             _LOGGER.debug("Writing state ON")
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        update = await self.coordinator.hass.async_add_executor_job(
-            self.coordinator.apex.set_output,
-            self.switch["did"],
-            "OFF"
-        )
+        update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output, self.switch["did"], "OFF")
         if update["status"][0] == "OFF":
             self._state = False
             self.switch["status"] = update["status"]
@@ -71,10 +63,7 @@ class Switch(ApexEntity, SwitchEntity):
             return False
         for value in self.coordinator.data["outputs"]:
             if value["did"] == self.switch["did"]:
-                if value["status"][0] == "ON" or value["status"][0] == "AON" or value["status"][0] == "AOF":
-                    return True
-                else:
-                    return False
+                return (value["status"][0] != "OFF")
 
     @property
     def icon(self):
