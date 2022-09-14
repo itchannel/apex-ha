@@ -35,7 +35,7 @@ class Switch(ApexEntity, SwitchEntity):
             self.switch["did"],
             "AUTO"
         )
-        if update["status"][0] == "ON" or update["status"][0] == "AON":
+        if update["status"][0] == "ON" or update["status"][0] == "AON" or update["status"][0] == "AOF":
             self._state = True
             self.switch["status"] = update["status"]
             _LOGGER.debug("Writing state ON")
@@ -47,7 +47,7 @@ class Switch(ApexEntity, SwitchEntity):
             self.switch["did"],
             "OFF"
         )
-        if update["status"][0] == "OFF" or update["status"][0] == "AOF":
+        if update["status"][0] == "OFF":
             self._state = False
             self.switch["status"] = update["status"]
             _LOGGER.debug("Writing state OFF")
