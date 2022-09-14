@@ -12,10 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class Apex(object):
-    def __init__(
-            self, username, password, deviceip
-    ):
-
+    def __init__(self, username, password, deviceip):
         self.username = username
         self.password = password
         self.deviceip = deviceip
@@ -129,7 +126,7 @@ class Apex(object):
         else:
             print("Error occured")
 
-    def toggle_output(self, did, state):
+    def set_output(self, did, state):
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
 
         # I gave this "type": "outlet" a bit of side-eye, but it seems to be fine even if the

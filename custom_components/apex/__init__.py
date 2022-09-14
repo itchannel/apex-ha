@@ -97,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 def set_output(hass, service, coordinator):
     did = service.data.get("did").strip()
     setting = service.data.get("setting").strip()
-    coordinator.apex.toggle_output(did, setting)
+    coordinator.apex.set_output(did, setting)
 
 
 def set_variable(hass, service, coordinator):
