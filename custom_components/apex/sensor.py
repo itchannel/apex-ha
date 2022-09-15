@@ -13,7 +13,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Entities from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
 
-    for value in entry.data["inputs"]:
+    for value in entry.data["status"]["inputs"]:
         sensor = ApexSensor(entry, value, config_entry.options)
         async_add_entities([sensor], True)
     for value in entry.data["status"]["outputs"]:
