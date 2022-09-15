@@ -1,7 +1,6 @@
 import logging
 import requests
 import time
-import json
 from typing import Optional
 
 DEFAULT_HEADERS = {"Accept": "*/*", "Content-Type": "application/json"}
@@ -38,7 +37,7 @@ class Apex(object):
         logger.debug(f"SID: {self.sid}")
         return self.sid is not None
 
-    def try3(self, url, postdata: Optional[json] = None):
+    def try3(self, url, postdata: Optional[dict] = None):
         tries = 0
         result = None
         while (tries < 3) and (result is None):
