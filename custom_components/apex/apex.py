@@ -57,6 +57,8 @@ class Apex(object):
                     result = r.json()
                 elif r.status_code == 401:
                     self.sid = None
+        if result is not None:
+            logger.debug (result)
         return result
 
     def status(self):
