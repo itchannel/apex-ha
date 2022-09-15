@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 from . import ApexEntity
 from .const import DOMAIN, SENSORS, MEASUREMENTS
 
-_LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -39,17 +39,17 @@ class ApexSensor(
     # Need to tidy this section up and avoid using so many for loops
     def get_value(self, ftype):
         if ftype == "state":
-            for value in self.coordinator.data["inputs"]:
+            for value in self.coordinator.data["status"]["inputs"]:
                 if value["did"] == self.sensor["did"]:
                     return value["value"]
-            for value in self.coordinator.data["outputs"]:
+            for value in self.coordinator.data["status"]["outputs"]:
                 if value["did"] == self.sensor["did"]:
                     if self.sensor["type"] == "dos":
                         return value["status"][4]
                     if self.sensor["type"] == "iotaPump|Sicce|Syncra":
                         return value["status"][1]
                     if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
-                        if "config" in self.coordinator.data:
+                        if  self.coordinator.data["config"] is not None:
                             for config in self.coordinator.data["config"]["oconf"]:
                                 if config["did"] == self.sensor["did"]:
                                     if config["ctype"] == "Advanced":
@@ -58,17 +58,17 @@ class ApexSensor(
                                         return "Not an Advanced variable!"
                     
         if ftype == "attributes":
-            for value in self.coordinator.data["inputs"]:
+            for value in self.coordinator.data["status"]["inputs"]:
                 if value["did"] == self.sensor["did"]:
                     return value
-            for value in self.coordinator.data["outputs"]:
+            for value in self.coordinator.data["status"]["outputs"]:
                 if value["did"] == self.sensor["did"]:
                     if self.sensor["type"] == "dos":
                         return value
                     if self.sensor["type"] == "iotaPump|Sicce|Syncra":
                         return value
                     if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
-                        if "config" in self.coordinator.data:
+                        if self.coordinator.data["config"] is not None:
                             for config in self.coordinator.data["config"]["oconf"]:
                                 if config["did"] == self.sensor["did"]: 
                                     return config
@@ -80,7 +80,7 @@ class ApexSensor(
             return prog
         test = re.findall("Set\s[^\d]*(\d+)", prog)
         if test:
-            _LOGGER.debug(test[0])
+            logger.debug(test[0])
             return int(test[0])
         else:
             return prog     
@@ -119,5 +119,5 @@ class ApexSensor(
         if self.sensor["type"] in SENSORS:
             return SENSORS[self.sensor["type"]]["icon"]
         else:
-            _LOGGER.debug("Missing icon: " + self.sensor["type"])
+            logger.debug("Missing icon: " + self.sensor["type"])
             return None

@@ -1,14 +1,12 @@
 import logging
 import requests
 import time
-import xmltodict
+import json
+from typing import Optional
 
-defaultHeaders = {
-    "Accept": "*/*",
-    "Content-Type": "application/json"
-}
+DEFAULT_HEADERS = {"Accept": "*/*", "Content-Type": "application/json"}
 
-_LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class Apex(object):
@@ -17,167 +15,88 @@ class Apex(object):
         self.password = password
         self.deviceip = deviceip
         self.sid = None
-        self.version = "new"
+        self.status_data = None
+        self.config_data = None
 
     def auth(self):
-        headers = {**defaultHeaders}
-        data = {"login": self.username, "password": self.password, "remember_me": False}
         # Try logging in 3 times due to controller timeout
-        login = 0
-        while login < 3:
-            r = requests.post("http://" + self.deviceip + "/rest/login", headers=headers, json=data)
-            # _LOGGER.debug(r.request.body)
-            _LOGGER.debug(r.status_code)
-            _LOGGER.debug(r.text)
+        tries = 0
+        while (tries < 3) and (self.sid is None):
+            tries += 1
+            headers = {**DEFAULT_HEADERS}
+            data = {"login": self.username, "password": self.password, "remember_me": False}
+            r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers, json=data)
+            # logger.debug(r.request.body)
+            logger.debug(r.status_code)
+            logger.debug(r.text)
 
             if r.status_code == 200:
                 self.sid = r.json()["connect.sid"]
-                return True
-            if r.status_code == 404:
-                self.version = "old"
-                return True
-            else:
-                print("Status code failure")
-                login += 1
 
             # XXX does there need to be some sort of sleep here?
+            
+        logger.debug(f"SID: {self.sid}")
+        return self.sid is not None
 
-        return False
+    def try3(self, url, postdata: Optional[json] = None):
+        tries = 0
+        result = None
+        while (tries < 3) and (result is None):
+            tries += 1
+            if self.auth():
+                # noinspection PyTypeChecker
+                headers = {**DEFAULT_HEADERS, "Cookie": "connect.sid=" + self.sid}
+                if postdata is None:
+                    r = requests.get(f"{url}?_={str(round(time.time()))}", headers=headers)
+                else:
+                    logger.debug(postdata)
+                    r = requests.put(url, headers=headers, json=postdata)
 
-    def oldstatus(self):
-        # Function for returning information on old controllers (Currently not authenticated)
-        headers = {**defaultHeaders}
-
-        r = requests.get("http://" + self.deviceip + "/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
-        xml = xmltodict.parse(r.text)
-        # Code to convert old style to new style json
-        result = {}
-        system = {}
-        system["software"] = xml["status"]["@software"]
-        system["hardware"] = xml["status"]["@hardware"] + " Legacy Version (Status.xml)"
-
-        result["system"] = system
-
-        inputs = []
-        for value in xml["status"]["probes"]["probe"]:
-            inputdata = {}
-            inputdata["did"] = "base_" + value["name"]
-            inputdata["name"] = value["name"]
-            inputdata["type"] = value["type"]
-            inputdata["value"] = value["value"]
-            inputs.append(inputdata)
-
-        result["inputs"] = inputs
-
-        outputs = []
-        for value in xml["status"]["outlets"]["outlet"]:
-            _LOGGER.debug(value)
-            outputdata = {}
-            outputdata["did"] = value["deviceID"]
-            outputdata["name"] = value["name"]
-            outputdata["status"] = [value["state"], "", "OK", ""]
-            outputdata["id"] = value["outputID"]
-            outputdata["type"] = "outlet"
-            outputs.append(outputdata)
-
-        result["outputs"] = outputs
-
-        _LOGGER.debug(result)
+                logger.debug(r.status_code)
+                if r.status_code == 200:
+                    result = r.json()
+                elif r.status_code == 401:
+                    self.sid = None
         return result
 
     def status(self):
-        _LOGGER.debug(self.sid)
-        if self.sid is None:
-            _LOGGER.debug("We are none")
-            self.auth()
-
-        if self.version == "old":
-            result = self.oldstatus()
-            return result
-        i = 0
-        while i <= 3:
-            headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
-            r = requests.get("http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())), headers=headers)
-            # _LOGGER.debug(r.text)
-
-            if r.status_code == 200:
-                return r.json()
-            elif r.status_code == 401:
-                self.auth()
-            else:
-                _LOGGER.debug("Unknown error occurred")
-                return {}
-            i += 1
+        status_data = self.try3(f"http://{self.deviceip}/rest/status")
+        if status_data is not None:
+            self.status_data = status_data
+        return self.status_data
 
     def config(self):
-        if self.version == "old":
-            result = {}
-            return result
-        if self.sid is None:
-            _LOGGER.debug("We are none")
-            self.auth()
-        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
-
-        r = requests.get("http://" + self.deviceip + "/rest/config?_=" + str(round(time.time())), headers=headers)
-        # _LOGGER.debug(r.text)
-
-        if r.status_code == 200:
-            return r.json()
-        else:
-            print("Error occured")
+        config_data = self.try3(f"http://{self.deviceip}/rest/config")
+        if config_data is not None:
+            self.config_data = config_data
+        return self.config_data
 
     def set_output(self, did, state):
-        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
-
         # I gave this "type": "outlet" a bit of side-eye, but it seems to be fine even if the
         # target is not technically an outlet.
-        data = {"did": did, "status": [state, "", "OK", ""], "type": "outlet"}
-        _LOGGER.debug(data)
-
-        r = requests.put("http://" + self.deviceip + "/rest/status/outputs/" + did, headers=headers, json=data)
-        data = r.json()
-        _LOGGER.debug(data)
-        return data
+        return self.try3(f"http://{self.deviceip}/rest/status/outputs/{did}", postdata={"did": did, "status": [state, "", "OK", ""], "type": "outlet"})
 
     def set_variable(self, did, code):
-        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
-        config = self.config()
         variable = None
-        for value in config["oconf"]:
-            if value["did"] == did:
-                variable = value
+        for output in self.config_data["oconf"]:
+            if output["did"] == did:
+                variable = output
 
-        if variable is None:
-            return {"error": "Variable/did not found"}
-
-        # I don't think it's necessary to warn on this, that just forces me to go to the Apex
-        # interface and set it...
-        # if variable["ctype"] != "Advanced":
-        #     _LOGGER.debug("Only Advanced mode currently supported")
-        #     return {"error": "Given variable was not of type Advanced"}
-
-        variable["ctype"] = "Advanced"
-        variable["prog"] = code
-        _LOGGER.debug(variable)
-
-        r = requests.put("http://" + self.deviceip + "/rest/config/oconf/" + did, headers=headers, json=variable)
-        _LOGGER.debug(r.text)
-
-        return {"error": ""}
+        if variable is not None:
+            # set the ctype and the program
+            variable["ctype"] = "Advanced"
+            variable["prog"] = code
+            return self.try3(f"http://{self.deviceip}/rest/config/oconf/{did}", postdata=variable)
+        else:
+            logger.error(f"Variable '{did}' not found")
+            return None
 
     def set_dos_rate(self, did, profile_id, rate):
-        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
-        config = self.config()
-
-        profile = config["pconf"][profile_id - 1]
+        # get the target profile from the config
+        profile = self.config_data["pconf"][profile_id - 1]
         if int(profile["ID"]) != profile_id:
-            return {"error": "Profile index mismatch"}
-
-        # turn the pump off to start - this will enable a new profile setting to start immediately
-        # without it, the DOS will wait until the current profile period expires
-        off = self.set_variable(did, f"Set OFF")
-        if off["error"] != "":
-            return off
+            logger.error(f"Profile index mismatch (expected {profile_id}, got {profile['ID']}")
+            return None
 
         # check if the requested rate is greater than the OFF threshold
         min_rate = 0.1
@@ -189,7 +108,10 @@ class Apex(object):
             pump_speeds = [250, 125, 60, 25, 12, 7]
             safety_margin = 2
             rate = int(rate * 10) / 10.0
+
+            # if the requested rate is within the supported range
             if int(pump_speeds[0] / safety_margin) >= rate:
+                # find the best speed match
                 target_pump_speed = rate * safety_margin
                 pump_speed_index = len(pump_speeds) - 1
                 while pump_speeds[pump_speed_index] < target_pump_speed:
@@ -208,15 +130,14 @@ class Apex(object):
                 # the DOS profile is the mode, target amount, target time period (one minute), and
                 # dose count
                 profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
-                _LOGGER.debug(profile)
 
-                r = requests.put(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", headers=headers, json=profile)
-                # _LOGGER.debug(r.text)
-
-                # turn the pump on
-                return self.set_variable(did, f"Set {profile['name']}")
+                # turn the pump off to start - this will enable a new profile setting to start immediately
+                # without it, the DOS will wait until the current profile period expires
+                if self.set_variable(did, f"Set OFF") is not None:
+                    return self.try3(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", postdata=profile)
             else:
-                return {"error": f"Requested rate ({rate} mL / min) exceeds the supported range (limit {int(pump_speeds[0] / safety_margin)} mL / min)."}
+                logger.error(f"Requested rate ({rate} mL / min) exceeds the supported range (limit {int(pump_speeds[0] / safety_margin)} mL / min).")
         else:
             # XXX TODO handle 0 < rate < 0.1ml/min by dosing over multiple minutes? Is this necessary?
-            return {"error": ""}
+            logger.warning(f"dosing does not currently support < {min_rate} mL / min")
+        return None

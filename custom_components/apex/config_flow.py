@@ -14,7 +14,7 @@ from .const import (  # pylint:disable=unused-import
 )
 from .apex import Apex
 
-_LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -39,7 +39,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise InvalidAuth from ex
 
     if not result:
-        _LOGGER.error("Failed to authenticate with Apex Controller")
+        logger.error("Failed to authenticate with Apex Controller")
         raise CannotConnect
 
     # Return info that you want to store in the config entry.
@@ -67,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidVin:
                 errors["base"] = "invalid_vin"
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+                logger.exception("Unexpected exception")
                 errors["base"] = "unknown"
 
         return self.async_show_form(

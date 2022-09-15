@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 
 PLATFORMS = ["sensor", "switch"]
 
-_LOGGER = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -46,9 +46,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         update_interval = entry.options[UPDATE_INTERVAL]
     else:
         update_interval = UPDATE_INTERVAL_DEFAULT
-    _LOGGER.debug(update_interval)
+    logger.debug(update_interval)
     for ar in entry.data:
-        _LOGGER.debug(ar)
+        logger.debug(ar)
 
     coordinator = ApexDataUpdateCoordinator(hass, user, password, deviceip, update_interval)
 
@@ -60,9 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(entry, component))
 
     async def async_set_options_service(service_call):
         await hass.async_add_executor_job(set_output, hass, service_call, coordinator)
@@ -73,23 +71,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_set_dos_rate_service(service_call):
         await hass.async_add_executor_job(set_dos_rate, hass, service_call, coordinator)
 
-    hass.services.async_register(
-        DOMAIN,
-        "set_output",
-        async_set_options_service
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        "set_variable",
-        async_set_variable_service
-    )
-
-    hass.services.async_register(
-        DOMAIN,
-        "set_dos_rate",
-        async_set_dos_rate_service
-    )
+    hass.services.async_register(DOMAIN, "set_output", async_set_options_service)
+    hass.services.async_register(DOMAIN, "set_variable", async_set_variable_service)
+    hass.services.async_register(DOMAIN, "set_dos_rate", async_set_dos_rate_service)
 
     return True
 
@@ -103,9 +87,7 @@ def set_output(hass, service, coordinator):
 def set_variable(hass, service, coordinator):
     did = service.data.get("did").strip()
     code = service.data.get("code")
-    status = coordinator.apex.set_variable(did, code)
-    if status["error"] != "":
-        raise HomeAssistantError(status["error"])
+    coordinator.apex.set_variable(did, code)
 
 
 def set_dos_rate(hass, service, coordinator):
@@ -121,10 +103,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
+            *[hass.config_entries.async_forward_entry_unload(entry, component) for component in PLATFORMS]
         )
     )
     if unload_ok:
@@ -145,7 +124,7 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(
             hass,
-            _LOGGER,
+            logger,
             name=DOMAIN,
             update_interval=timedelta(seconds=update_interval),
         )
@@ -154,21 +133,17 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
         """Fetch data from Apex Controller."""
         try:
             async with async_timeout.timeout(30):
-                data = await self._hass.async_add_executor_job(
-                    self.apex.status  # Fetch new status
-                )
-
-                data["config"] = await self._hass.async_add_executor_job(
-                    self.apex.config  # Fetch new status
-                )
-                # _LOGGER.debug("Refreshing Now")
-                # _LOGGER.debug(data)
-
+                data = {
+                    "status": await self._hass.async_add_executor_job(self.apex.status),
+                    "config": await self._hass.async_add_executor_job(self.apex.config)
+                }
+                # logger.debug("Refreshing Now")
+                # logger.debug(data)
                 return data
         except Exception as ex:
             self._available = False  # Mark as unavailable
-            _LOGGER.warning(str(ex))
-            _LOGGER.warning("Error communicating with Apex for %s", self.deviceip)
+            logger.warning(str(ex))
+            logger.warning("Error communicating with Apex for %s", self.deviceip)
             raise UpdateFailed(
                 f"Error communicating with Apex for {self.deviceip}"
             ) from ex
@@ -177,9 +152,7 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
 class ApexEntity(CoordinatorEntity):
     """Defines a base Apex entity."""
 
-    def __init__(
-            self, *, device_id: str, name: str, coordinator: ApexDataUpdateCoordinator
-    ):
+    def __init__(self, *, device_id: str, name: str, coordinator: ApexDataUpdateCoordinator):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._device_id = device_id
@@ -193,7 +166,7 @@ class ApexEntity(CoordinatorEntity):
     @property
     def name(self):
         """Return the name of the entity."""
-        _LOGGER.debug(self._name)
+        logger.debug(self._name)
         return self._name
 
     @property
@@ -210,8 +183,8 @@ class ApexEntity(CoordinatorEntity):
         return {
             "identifiers": {(DOMAIN, self.coordinator.deviceip)},
             "name": f"Apex Controller ({self.coordinator.deviceip})",
-            "hw_version": self.coordinator.data["system"]["hardware"],
-            "sw_version": self.coordinator.data["system"]["software"],
+            "hw_version": self.coordinator.data["status"]["system"]["hardware"],
+            "sw_version": self.coordinator.data["status"]["system"]["software"],
             "manufacturer": MANUFACTURER,
             "test": "TEST"
         }
