@@ -12,7 +12,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Switch from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
 
-    for value in entry.data["outputs"]:
+    for value in entry.data["status"]["outputs"]:
         sw = Switch(entry, value, config_entry.options)
         async_add_entities([sw], False)
 

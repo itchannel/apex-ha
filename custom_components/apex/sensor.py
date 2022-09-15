@@ -16,7 +16,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for value in entry.data["inputs"]:
         sensor = ApexSensor(entry, value, config_entry.options)
         async_add_entities([sensor], True)
-    for value in entry.data["outputs"]:
+    for value in entry.data["status"]["outputs"]:
         if value["type"] == "dos" or value["type"] == "variable" or value["type"] == "virtual" or value["type"] == "iotaPump|Sicce|Syncra":
             sensor = ApexSensor(entry, value, config_entry.options)
             async_add_entities([sensor], True)
