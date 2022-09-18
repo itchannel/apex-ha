@@ -94,9 +94,7 @@ def set_dos_rate(hass, service, coordinator):
     did = service.data.get("did").strip()
     profile_id = int(service.data.get("profile_id"))
     rate = float(service.data.get("rate"))
-    status = coordinator.apex.set_dos_rate(did, profile_id, rate)
-    if status["error"] != "":
-        raise HomeAssistantError(status["error"])
+    coordinator.apex.set_dos_rate(did, profile_id, rate)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
