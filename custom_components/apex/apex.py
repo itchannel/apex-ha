@@ -75,6 +75,7 @@ class Apex(object):
     def set_output(self, did, state):
         # I gave this "type": "outlet" a bit of side-eye, but it seems to be fine even if the
         # target is not technically an outlet.
+        logger.debug(f"Set output ({did=}) to ({state=})")
         return self.try3(f"http://{self.deviceip}/rest/status/outputs/{did}", postdata={"did": did, "status": [state, "", "OK", ""], "type": "outlet"})
 
     def set_variable(self, did, code):
@@ -87,6 +88,7 @@ class Apex(object):
             # set the ctype and the program
             variable["ctype"] = "Advanced"
             variable["prog"] = code
+            logger.debug(f"Set variable ({did=}) program to ({code=})")
             return self.try3(f"http://{self.deviceip}/rest/config/oconf/{did}", postdata=variable)
         else:
             logger.error(f"Variable '{did}' not found")
@@ -126,7 +128,7 @@ class Apex(object):
                 # we set the profile to be what we need it to be so the user doesn't have to do
                 # anything except choose the profile to use
                 profile["type"] = "dose"
-                profile["name"] = f"Dose_{did}"
+                profile_name = profile["name"] = f"Dose_{did}"
 
                 # the DOS profile is the mode, target amount, target time period (one minute), and
                 # dose count
@@ -134,8 +136,9 @@ class Apex(object):
 
                 # turn the pump off to start - this will enable a new profile setting to start immediately
                 # without it, the DOS will wait until the current profile period expires
-                if self.set_variable(did, f"Set OFF") is not None:
-                    return self.try3(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", postdata=profile)
+                if self.set_variable(did, "Set OFF") is not None:
+                    if self.try3(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", postdata=profile) is not None:
+                        return self.set_variable(did, f"Set {profile_name}")
             else:
                 logger.error(f"Requested rate ({rate} mL / min) exceeds the supported range (limit {int(pump_speeds[0] / safety_margin)} mL / min).")
         else:
