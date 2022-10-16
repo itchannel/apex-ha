@@ -8,20 +8,14 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
 
-from .const import (
-    DOMAIN,
-    DEVICEIP,
-    MANUFACTURER,
-    UPDATE_INTERVAL,
-    UPDATE_INTERVAL_DEFAULT
-)
+from .const import DOMAIN, NAME, DEVICEIP, MANUFACTURER, UPDATE_INTERVAL, UPDATE_INTERVAL_DEFAULT, DID, STATUS, CONFIG
 from .apex import Apex
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
@@ -71,30 +65,40 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_set_dos_rate_service(service_call):
         await hass.async_add_executor_job(set_dos_rate, hass, service_call, coordinator)
 
+    async def async_set_temperature(service_call):
+        await hass.async_add_executor_job(set_temperature, hass, service_call, coordinator)
+
     hass.services.async_register(DOMAIN, "set_output", async_set_options_service)
     hass.services.async_register(DOMAIN, "set_variable", async_set_variable_service)
     hass.services.async_register(DOMAIN, "set_dos_rate", async_set_dos_rate_service)
+    hass.services.async_register(DOMAIN, "set_temperature", async_set_temperature)
 
     return True
 
 
 def set_output(hass, service, coordinator):
-    did = service.data.get("did").strip()
+    did = service.data.get(DID).strip()
     setting = service.data.get("setting").strip()
-    coordinator.apex.set_output(did, setting)
+    coordinator.apex.set_output_state(did, setting)
 
 
 def set_variable(hass, service, coordinator):
-    did = service.data.get("did").strip()
+    did = service.data.get(DID).strip()
     code = service.data.get("code")
     coordinator.apex.set_variable(did, code)
 
 
 def set_dos_rate(hass, service, coordinator):
-    did = service.data.get("did").strip()
+    did = service.data.get(DID).strip()
     profile_id = int(service.data.get("profile_id"))
     rate = float(service.data.get("rate"))
     coordinator.apex.set_dos_rate(did, profile_id, rate)
+
+
+def set_temperature(hass, service, coordinator):
+    did = service.data.get(DID).strip()
+    temperature = float(service.data.get("temperature"))
+    coordinator.apex.set_temperature(did, temperature)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
@@ -132,8 +136,8 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
         try:
             async with async_timeout.timeout(30):
                 data = {
-                    "status": await self._hass.async_add_executor_job(self.apex.status),
-                    "config": await self._hass.async_add_executor_job(self.apex.config)
+                    STATUS: await self._hass.async_add_executor_job(self.apex.status),
+                    CONFIG: await self._hass.async_add_executor_job(self.apex.config)
                 }
                 # logger.debug("Refreshing Now")
                 # logger.debug(data)
@@ -180,9 +184,9 @@ class ApexEntity(CoordinatorEntity):
 
         return {
             "identifiers": {(DOMAIN, self.coordinator.deviceip)},
-            "name": f"Apex Controller ({self.coordinator.deviceip})",
-            "hw_version": self.coordinator.data["status"]["system"]["hardware"],
-            "sw_version": self.coordinator.data["status"]["system"]["software"],
+            NAME: f"Apex Controller ({self.coordinator.deviceip})",
+            "hw_version": self.coordinator.data[STATUS]["system"]["hardware"],
+            "sw_version": self.coordinator.data[STATUS]["system"]["software"],
             "manufacturer": MANUFACTURER,
             "test": "TEST"
         }

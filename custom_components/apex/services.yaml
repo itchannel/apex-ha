@@ -52,3 +52,18 @@ set_dos_rate:
       example: 1.2
       selector:
         text:
+set_temperature:
+  description: "Set an outlet to be a heater with the given target temperature "
+  fields:
+    did:
+      name: DID
+      description: "DID of the Heater"
+      example: "2_7"
+      selector:
+        text:
+    temperature:
+      name: Temperature
+      description: "The desired temperature (degrees in APex configured units)"
+      example: 80
+      selector:
+        text:

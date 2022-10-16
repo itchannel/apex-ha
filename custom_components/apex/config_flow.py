@@ -7,9 +7,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
 from .const import (  # pylint:disable=unused-import
-    DOMAIN, 
+    DOMAIN,
     DEVICEIP,
-    UPDATE_INTERVAL, 
+    UPDATE_INTERVAL,
     UPDATE_INTERVAL_DEFAULT
 )
 from .apex import Apex
@@ -30,7 +30,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    
+
     apex = Apex(data[CONF_USERNAME], data[CONF_PASSWORD], data[DEVICEIP])
 
     try:

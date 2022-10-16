@@ -2,6 +2,7 @@ import logging
 import requests
 import time
 from typing import Optional
+from const import NAME, STATUS, DID, TYPE, OUTLET, CTYPE, ADVANCED, HEATER, PROG, PCONF, OCONF
 
 DEFAULT_HEADERS = {"Accept": "*/*", "Content-Type": "application/json"}
 
@@ -33,7 +34,7 @@ class Apex(object):
                 self.sid = r.json()["connect.sid"]
 
             # XXX does there need to be some sort of sleep here?
-            
+
         logger.debug(f"SID: {self.sid}")
         return self.sid is not None
 
@@ -57,7 +58,7 @@ class Apex(object):
                 elif r.status_code == 401:
                     self.sid = None
         if result is not None:
-            logger.debug (result)
+            logger.debug(result)
         return result
 
     def status(self):
@@ -72,31 +73,39 @@ class Apex(object):
             self.config_data = config_data
         return self.config_data
 
-    def set_output(self, did, state):
-        # I gave this "type": "outlet" a bit of side-eye, but it seems to be fine even if the
+    def set_output_state(self, did, state):
+        # I gave this TYPE: OUTLET a bit of side-eye, but it seems to be fine even if the
         # target is not technically an outlet.
         logger.debug(f"Set output ({did=}) to ({state=})")
-        return self.try3(f"http://{self.deviceip}/rest/status/outputs/{did}", postdata={"did": did, "status": [state, "", "OK", ""], "type": "outlet"})
+        return self.try3(f"http://{self.deviceip}/rest/status/outputs/{did}", postdata={DID: did, STATUS: [state, "", "OK", ""], TYPE: OUTLET})
+
+    def get_output(self, did):
+        for output in self.config_data[OCONF]:
+            if output[DID] == did:
+                return output
+        return None
+
+    def set_program(self, did, ctype, code):
+        output = self.get_output(did)
+        if output is not None:
+            # set the ctype and the program
+            output[CTYPE] = ctype
+            output[PROG] = code
+            logger.debug(f"Set output ({did=}) program to ({code=})")
+            return self.try3(f"http://{self.deviceip}/rest/config/oconf/{did}", postdata=output)
+        else:
+            logger.error(f"Output '{did}' not found")
+            return None
 
     def set_variable(self, did, code):
-        variable = None
-        for output in self.config_data["oconf"]:
-            if output["did"] == did:
-                variable = output
+        return self.set_program(did, ADVANCED, code)
 
-        if variable is not None:
-            # set the ctype and the program
-            variable["ctype"] = "Advanced"
-            variable["prog"] = code
-            logger.debug(f"Set variable ({did=}) program to ({code=})")
-            return self.try3(f"http://{self.deviceip}/rest/config/oconf/{did}", postdata=variable)
-        else:
-            logger.error(f"Variable '{did}' not found")
-            return None
+    def set_temperature(self, did, temperature):
+        return self.set_program(did, HEATER, f"Fallback OFF\nIf Tmp < {temperature} Then ON\nIf Tmp > {temperature} Then OFF\n")
 
     def set_dos_rate(self, did, profile_id, rate):
         # get the target profile from the config
-        profile = self.config_data["pconf"][profile_id - 1]
+        profile = self.config_data[PCONF][profile_id - 1]
         if int(profile["ID"]) != profile_id:
             logger.error(f"Profile index mismatch (expected {profile_id}, got {profile['ID']}")
             return None
@@ -130,8 +139,8 @@ class Apex(object):
 
                     # we set the profile to be what we need it to be so the user doesn't have to do
                     # anything except choose the profile to use
-                    profile["type"] = "dose"
-                    profile_name = profile["name"] = f"Dose_{did}"
+                    profile[TYPE] = "dose"
+                    profile_name = profile[NAME] = f"Dose_{did}"
 
                     # the DOS profile is the mode, target amount, target time period (one minute), and
                     # dose count

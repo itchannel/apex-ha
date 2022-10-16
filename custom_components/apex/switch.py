@@ -3,16 +3,19 @@ import logging
 from homeassistant.components.switch import SwitchEntity
 
 from . import ApexEntity
-from .const import DOMAIN, SWITCHES
+from .const import DOMAIN, NAME, SWITCHES, STATUS, DID, TYPE, OUTPUTS
 
 logger = logging.getLogger(__name__)
+
+OFF = "OFF"
+AUTO = "AUTO"
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Switch from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
 
-    for value in entry.data["status"]["outputs"]:
+    for value in entry.data[STATUS][OUTPUTS]:
         sw = Switch(entry, value, config_entry.options)
         async_add_entities([sw], False)
 
@@ -22,7 +25,7 @@ class Switch(ApexEntity, SwitchEntity):
 
     def __init__(self, coordinator, switch, options):
 
-        self._device_id = "apex_" + switch["did"]
+        self._device_id = f"apex_{switch[NAME]}"
         self.switch = switch
         self.coordinator = coordinator
         self._state = None
@@ -30,24 +33,24 @@ class Switch(ApexEntity, SwitchEntity):
         self.coordinator_context = object()
 
     async def async_turn_on(self, **kwargs):
-        update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output, self.switch["did"], "AUTO")
-        if (update is not None) and (update["status"][0] != "OFF"):
+        update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output_state, self.switch[DID], AUTO)
+        if (update is not None) and (update[STATUS][0] != OFF):
             self._state = True
-            self.switch["status"] = update["status"]
-            logger.debug("Writing state ON")
+            self.switch[STATUS] = update[STATUS]
+            logger.debug(f"Writing state {AUTO}")
             self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
-        update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output, self.switch["did"], "OFF")
-        if (update is not None) and (update["status"][0] == "OFF"):
+        update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output_state, self.switch[DID], OFF)
+        if (update is not None) and (update[STATUS][0] == OFF):
             self._state = False
-            self.switch["status"] = update["status"]
-            logger.debug("Writing state OFF")
+            self.switch[STATUS] = update[STATUS]
+            logger.debug(f"Writing state {OFF}")
             self.async_write_ha_state()
 
     @property
     def name(self):
-        return "apex_" + self.switch["name"]
+        return "apex_" + self.switch[NAME]
 
     @property
     def device_id(self):
@@ -61,16 +64,16 @@ class Switch(ApexEntity, SwitchEntity):
         elif self._state is False:
             self._state = None
             return False
-        for value in self.coordinator.data["status"]["outputs"]:
-            if value["did"] == self.switch["did"]:
-                return (value["status"][0] != "OFF")
+        for value in self.coordinator.data[STATUS][OUTPUTS]:
+            if value[DID] == self.switch[DID]:
+                return value[STATUS][0] != OFF
 
     @property
     def icon(self):
-        if self.switch["type"] in SWITCHES:
-            return SWITCHES[self.switch["type"]]["icon"]
+        if self.switch[TYPE] in SWITCHES:
+            return SWITCHES[self.switch[TYPE]]["icon"]
         else:
-            logger.debug("Missing icon: " + self.switch["type"])
+            logger.debug("Missing icon: " + self.switch[TYPE])
             return None
 
     @property
