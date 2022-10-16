@@ -2,7 +2,7 @@ import logging
 import requests
 import time
 from typing import Optional
-from const import NAME, STATUS, DID, TYPE, OUTLET, CTYPE, ADVANCED, HEATER, PROG, PCONF, OCONF
+from .const import NAME, STATUS, DID, TYPE, OUTLET, CTYPE, ADVANCED, HEATER, PROG, PCONF, OCONF
 
 DEFAULT_HEADERS = {"Accept": "*/*", "Content-Type": "application/json"}
 
