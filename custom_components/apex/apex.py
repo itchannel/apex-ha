@@ -2,11 +2,22 @@ import logging
 import requests
 import time
 from typing import Optional
-from .const import NAME, STATUS, DID, TYPE, OUTLET, CTYPE, ADVANCED, HEATER, PROG, PCONF, OCONF
+from .const import NAME, STATUS, OUTPUTS, DID, TYPE, OUTLET, CTYPE, ADVANCED, HEATER, PROG, CONFIG, PCONF, OCONF, MCONF
 
 DEFAULT_HEADERS = {"Accept": "*/*", "Content-Type": "application/json"}
 
 logger = logging.getLogger(__name__)
+
+# url constants
+REST = "rest"
+
+# module constants
+ABADDR = "abaddr"
+HWTYPE = "hwtype"
+HWTYPE_DOS = "DOS"
+EXTRA = "extra"
+VOLUME = "volume"
+VOLUME_LEFT = "volumeLeft"
 
 
 class Apex(object):
@@ -25,7 +36,7 @@ class Apex(object):
             tries += 1
             headers = {**DEFAULT_HEADERS}
             data = {"login": self.username, "password": self.password, "remember_me": False}
-            r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers, json=data)
+            r = requests.post(f"http://{self.deviceip}/{REST}/login", headers=headers, json=data)
             # logger.debug(r.request.body)
             logger.debug(r.status_code)
             logger.debug(r.text)
@@ -38,9 +49,10 @@ class Apex(object):
         logger.debug(f"SID: {self.sid}")
         return self.sid is not None
 
-    def try3(self, url, postdata: Optional[dict] = None):
+    def try3(self, url_path: str, postdata: Optional[dict] = None) -> Optional[dict]:
         tries = 0
         result = None
+        url = f"http://{self.deviceip}/{REST}/{url_path}"
         while (tries < 3) and (result is None):
             tries += 1
             if self.auth():
@@ -61,49 +73,52 @@ class Apex(object):
             logger.debug(result)
         return result
 
-    def status(self):
-        status_data = self.try3(f"http://{self.deviceip}/rest/status")
+    def status(self) -> Optional[dict]:
+        status_data = self.try3(f"status")
         if status_data is not None:
             self.status_data = status_data
         return self.status_data
 
-    def config(self):
-        config_data = self.try3(f"http://{self.deviceip}/rest/config")
+    def config(self) -> Optional[dict]:
+        config_data = self.try3(CONFIG)
         if config_data is not None:
             self.config_data = config_data
         return self.config_data
 
-    def set_output_state(self, did, state):
+    def set_output_state(self, did: str, state: str) -> Optional[dict]:
         # I gave this TYPE: OUTLET a bit of side-eye, but it seems to be fine even if the
         # target is not technically an outlet.
         logger.debug(f"Set output ({did=}) to ({state=})")
-        return self.try3(f"http://{self.deviceip}/rest/status/outputs/{did}", postdata={DID: did, STATUS: [state, "", "OK", ""], TYPE: OUTLET})
+        return self.try3(f"{STATUS}/{OUTPUTS}/{did}", {DID: did, STATUS: [state, "", "OK", ""], TYPE: OUTLET})
 
-    def get_output(self, did):
+    def get_output(self, did: str, expected_ctype: Optional[str]) -> Optional[dict]:
         for output in self.config_data[OCONF]:
             if output[DID] == did:
-                return output
+                if (expected_ctype is None) or (output[CTYPE] == expected_ctype):
+                    return output
+                logger.error(f"Output with '{DID}' = {did} is not the expected '{CTYPE}' (got '{output[CTYPE]}', expected '{expected_ctype}'). Double check the '{DID}' or update the output in Apex Fusion.")
+                return None
         return None
 
-    def set_program(self, did, ctype, code):
-        output = self.get_output(did)
+    def set_program(self, did: str, ctype: str, code: str, force_set_ctype: bool = True) -> Optional[dict]:
+        output = self.get_output(did, ctype if force_set_ctype else None)
         if output is not None:
-            # set the ctype and the program
+            # set the ctype and program
             output[CTYPE] = ctype
             output[PROG] = code
             logger.debug(f"Set output ({did=}) program to ({code=})")
-            return self.try3(f"http://{self.deviceip}/rest/config/oconf/{did}", postdata=output)
+            return self.try3(f"{CONFIG}/{OCONF}/{did}", output)
         else:
             logger.error(f"Output '{did}' not found")
             return None
 
-    def set_variable(self, did, code):
-        return self.set_program(did, ADVANCED, code)
+    def set_variable(self, did: str, code: str) -> Optional[dict]:
+        return self.set_program(did, ADVANCED, code, False)
 
-    def set_temperature(self, did, temperature):
+    def set_temperature(self, did: str, temperature: float) -> Optional[dict]:
         return self.set_program(did, HEATER, f"Fallback OFF\nIf Tmp < {temperature} Then ON\nIf Tmp > {temperature} Then OFF\n")
 
-    def set_dos_rate(self, did, profile_id, rate):
+    def set_dos_rate(self, did: str, profile_id: int, rate: float) -> Optional[dict]:
         # get the target profile from the config
         profile = self.config_data[PCONF][profile_id - 1]
         if int(profile["ID"]) != profile_id:
@@ -116,7 +131,7 @@ class Apex(object):
             # check if the requested rate is greater than the OFF threshold
             min_rate = 0.1
             if rate > min_rate:
-                # our input is a target rate (ml/min). we want to map this to the nearest 0.1ml/min, and
+                # our input is a target rate (mL/min). we want to map this to the nearest 0.1mL/min, and
                 # then find the slowest pump speed possible to manage sound levels. Neptune uses a 3x
                 # safety margin to extend the life of the pump, but the setting only appears to be
                 # enforced in the Fusion UI. We use a 2x margin because we can.
@@ -147,11 +162,37 @@ class Apex(object):
                     profile["data"] = {"mode": mode, "amount": rate, "time": 60, "count": 255}
 
                     # try to set the profile data, and if successful set the pump to it
-                    if self.try3(f"http://{self.deviceip}/rest/config/pconf/{profile_id}", postdata=profile) is not None:
+                    if self.try3(f"{CONFIG}/{PCONF}/{profile_id}", profile) is not None:
                         return self.set_variable(did, f"Set {profile_name}")
                 else:
                     logger.error(f"Requested rate ({rate} mL / min) exceeds the supported range (limit {int(pump_speeds[0] / safety_margin)} mL / min).")
             else:
                 # XXX TODO handle 0 < rate < 0.1ml/min by dosing over multiple minutes? Is this necessary?
                 logger.warning(f"dosing does not currently support < {min_rate} mL / min")
+        return None
+
+    # section of code to deal with module configuration
+    def get_module(self, module_number: int, expected_hwtype: Optional[str] = None) -> Optional[dict]:
+        for module in self.config_data[MCONF]:
+            if module[ABADDR] == module_number:
+                if (expected_hwtype is None) or (module[HWTYPE] == expected_hwtype):
+                    return module
+                logger.error(f"Module #{module_number} is not the expected '{HWTYPE}' (got '{module[HWTYPE]}', expected '{expected_hwtype}').")
+                return None
+        logger.error(f"Module #{module_number} not found.")
+        return None
+
+    def refill_dos_reservoir(self, module_number: int, pump_number: int) -> Optional[dict]:
+        # the pump number should be either 1 or 2, but it's not a guarantee 1 didn't mean 2 if the
+        # user is a programmer - blech
+        if 1 <= pump_number <= 2:
+            pump_index = pump_number - 1
+
+            # find the module conf for the requested device and double check that it's a DOS pump
+            module = self.get_module(module_number, HWTYPE_DOS)
+            if module is not None:
+                module[EXTRA][VOLUME_LEFT][pump_index] = module[EXTRA][VOLUME][pump_index]
+                return self.try3(f"{CONFIG}/{MCONF}/{module_number}", module)
+        else:
+            logger.error(f"Incorrect pump number (should be 1 or 2), got {pump_number}")
         return None

@@ -2,13 +2,13 @@ set_output:
   description: "Set the value of an output on the controller e.g. setting the lights to AUTO (Automatic) instead of using the switch entity in HA which only supports OFF/ON"
   fields:
     did:
-      name: DID
+      name: "DID"
       description: "DID of selected output, can be obtained from attributes of the given switch in HA"
       example: "3_1"
       selector:
         text:
     setting:
-      name: Setting
+      name: "Setting"
       description: "Setting to set the output to e.g. ON/OFF/AUTO"
       selector:
         select:
@@ -20,13 +20,13 @@ set_variable:
   description: "Ability to program variables on the controller e.g. Set 75 (Only Advanced mode variables supported currently!!"
   fields:
     did:
-      name: DID
+      name: "DID"
       description: "DID of the selected variable or output to modify"
       example: "Cntl_A1"
       selector:
         text:
     code:
-      name: Code
+      name: "Code"
       description: "Code to modify on the variable/output"
       example: "Set 75"
       selector:
@@ -35,34 +35,49 @@ set_dos_rate:
   description: "Set the dosing rate for a DOS pump"
   fields:
     did:
-      name: DID
+      name: "DID"
       description: "DID of the DOS pump"
       example: "4_1"
       selector:
         text:
     profile_id:
-      name: Profile ID
+      name: "Profile ID"
       description: "Profile ID to assign to the DOS pump, the integration will rename it appropriately."
       example: 11
       selector:
         text:
     rate:
-      name: Rate
+      name: "Rate"
       description: "The desired dosing rate, in mL / min. (effective range is 0 - 125)"
       example: 1.2
+      selector:
+        text:
+refill_dos_reservoir:
+  description: "Set the DOS pump reservoir remaining value to reflect a fill operation"
+  fields:
+    module_number:
+      name: "Module Number"
+      description: "Number of the module for the DOS pump (range 1..n)"
+      example: 4
+      selector:
+        text:
+    pump_number:
+      name: "Pump Number"
+      description: "DOS modules have 2 pumps (1 and 2), each with an independent reservoir."
+      example: 1
       selector:
         text:
 set_temperature:
   description: "Set an outlet to be a heater with the given target temperature "
   fields:
     did:
-      name: DID
+      name: "DID"
       description: "DID of the Heater"
       example: "2_7"
       selector:
         text:
     temperature:
-      name: Temperature
+      name: "Temperature"
       description: "The desired temperature (degrees in APex configured units)"
       example: 80
       selector:

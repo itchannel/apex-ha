@@ -13,6 +13,7 @@ OUTPUTS = "outputs"
 PCONF = "pconf"
 OCONF = "oconf"
 ICONF = "iconf"
+MCONF = "mconf"
 STATE = "state"
 ATTRIBUTES = "attributes"
 
@@ -53,7 +54,7 @@ SENSORS = {
     "alk": {"icon": "mdi:test-tube", "measurement": "dKh"},
     "ca": {"icon": "mdi:test-tube", "measurement": "ppm"},
     "mg": {"icon": "mdi:test-tube", "measurement": "ppm"},
-    DOS: {"icon": "mdi:pump", "measurement": "ml"},
+    DOS: {"icon": "mdi:pump", "measurement": "mL"},
     IOTA: {"icon": "mdi:pump", "measurement": "%"},
     VARIABLE: {"icon": "mdi:cog-outline"},
     VIRTUAL: {"icon": "mdi:cog-outline"},
