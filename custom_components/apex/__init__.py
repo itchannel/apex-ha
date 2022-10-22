@@ -68,10 +68,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_set_temperature(service_call):
         await hass.async_add_executor_job(set_temperature, hass, service_call, coordinator)
 
+    async def async_refill_dos_reservoir(service_call):
+        await hass.async_add_executor_job(refill_dos_reservoir, hass, service_call, coordinator)
+
     hass.services.async_register(DOMAIN, "set_output", async_set_options_service)
     hass.services.async_register(DOMAIN, "set_variable", async_set_variable_service)
     hass.services.async_register(DOMAIN, "set_dos_rate", async_set_dos_rate_service)
     hass.services.async_register(DOMAIN, "set_temperature", async_set_temperature)
+    hass.services.async_register(DOMAIN, "refill_dos_reservoir", async_refill_dos_reservoir)
 
     return True
 
@@ -99,6 +103,12 @@ def set_temperature(hass, service, coordinator):
     did = service.data.get(DID).strip()
     temperature = float(service.data.get("temperature"))
     coordinator.apex.set_temperature(did, temperature)
+
+
+def refill_dos_reservoir(hass, service, coordinator):
+    module_number = int(service.data.get("module_number").strip())
+    pump_number = int(service.data.get("pump_number"))
+    coordinator.apex.refill_dos_reservoir(module_number, pump_number)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
