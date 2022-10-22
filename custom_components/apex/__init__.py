@@ -106,7 +106,7 @@ def set_temperature(hass, service, coordinator):
 
 
 def refill_dos_reservoir(hass, service, coordinator):
-    module_number = int(service.data.get("module_number").strip())
+    module_number = int(service.data.get("module_number"))
     pump_number = int(service.data.get("pump_number"))
     coordinator.apex.refill_dos_reservoir(module_number, pump_number)
 
