@@ -1,4 +1,8 @@
 ## **Changelog**
+## Version 1.10
+- Dos control service (@brettonw)
+- Error handling fixes (@brettonw)
+
 ## Version 1.09
 
 - Add set_variable service for setting programming code in variables e.g. "Set 75" 
