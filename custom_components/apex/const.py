@@ -15,9 +15,10 @@ SWITCHES = {
 
 SENSORS = {
     "Temp": {"icon": "mdi:water-thermometer", "measurement": "°C"},
-    "Cond": {"icon": "mdi:shaker-outline"}, 
-    "pH": {"icon": "mdi:test-tube", "measurement": "pH"},
-    "ORP": {"icon": "mdi:test-tube"},
+    "Cond": {"icon": "mdi:shaker-outline", "measurement": "ppt"},
+    "in": {"icon": "mdi:ruler", "measurement": "in"},
+    "pH": {"icon": "mdi:test-tube", "measurement": " "},
+    "ORP": {"icon": "mdi:test-tube", "measurement": "mV"},
     "digital": {"icon": "mdi:digital-ocean"},
     "Amps": { "icon" : "mdi:lightning-bolt-circle", "measurement": "A"},
     "pwr": {"icon" : "mdi:power-plug", "measurement": "W"},

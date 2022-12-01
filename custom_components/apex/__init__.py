@@ -6,7 +6,6 @@ from datetime import timedelta
 import async_timeout
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -32,7 +31,6 @@ PLATFORMS = ["sensor", "switch"]
 _LOGGER = logging.getLogger(__name__)
 
 
-
 async def async_setup(hass: HomeAssistant, config: dict):
     """Set up the Apex component."""
     hass.data.setdefault(DOMAIN, {})
@@ -56,7 +54,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     await coordinator.async_refresh()  # Get initial data
 
-
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
 
@@ -73,19 +70,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_set_variable_service(service_call):
         await hass.async_add_executor_job(set_variable, hass, service_call, coordinator)
 
+    async def async_set_dos_rate_service(service_call):
+        await hass.async_add_executor_job(set_dos_rate, hass, service_call, coordinator)
+
     hass.services.async_register(
         DOMAIN,
-        "set_output", 
+        "set_output",
         async_set_options_service
     )
 
     hass.services.async_register(
         DOMAIN,
-        "set_variable", 
+        "set_variable",
         async_set_variable_service
     )
 
-
+    hass.services.async_register(
+        DOMAIN,
+        "set_dos_rate",
+        async_set_dos_rate_service
+    )
 
     return True
 
@@ -93,12 +97,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 def set_output(hass, service, coordinator):
     did = service.data.get("did").strip()
     setting = service.data.get("setting").strip()
-    status = coordinator.apex.toggle_output(did, setting)
+    coordinator.apex.toggle_output(did, setting)
+
 
 def set_variable(hass, service, coordinator):
     did = service.data.get("did").strip()
     code = service.data.get("code")
     status = coordinator.apex.set_variable(did, code)
+    if status["error"] != "":
+        raise HomeAssistantError(status["error"])
+
+
+def set_dos_rate(hass, service, coordinator):
+    did = service.data.get("did").strip()
+    profile_id = int(service.data.get("profile_id"))
+    rate = float(service.data.get("rate"))
+    status = coordinator.apex.set_dos_rate(did, profile_id, rate)
     if status["error"] != "":
         raise HomeAssistantError(status["error"])
 
@@ -147,8 +161,8 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
                 data["config"] = await self._hass.async_add_executor_job(
                     self.apex.config  # Fetch new status
                 )
-                #_LOGGER.debug("Refreshing Now")
-                #_LOGGER.debug(data)
+                # _LOGGER.debug("Refreshing Now")
+                # _LOGGER.debug(data)
 
                 return data
         except Exception as ex:
@@ -164,13 +178,12 @@ class ApexEntity(CoordinatorEntity):
     """Defines a base Apex entity."""
 
     def __init__(
-        self, *, device_id: str, name: str, coordinator: ApexDataUpdateCoordinator
+            self, *, device_id: str, name: str, coordinator: ApexDataUpdateCoordinator
     ):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._device_id = device_id
         self._name = name
-
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -202,5 +215,3 @@ class ApexEntity(CoordinatorEntity):
             "manufacturer": MANUFACTURER,
             "test": "TEST"
         }
-
-
