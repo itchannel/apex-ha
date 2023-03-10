@@ -81,7 +81,7 @@ class ApexSensor(
             return prog
         test = re.findall("Set\s[^\d]*(\d+)", prog)
         if test:
-            logger.debug(test[0])
+            # logger.debug(test[0])
             return int(test[0])
         else:
             return prog     
