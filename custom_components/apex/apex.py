@@ -38,8 +38,8 @@ class Apex(object):
             data = {"login": self.username, "password": self.password, "remember_me": False}
             r = requests.post(f"http://{self.deviceip}/{REST}/login", headers=headers, json=data)
             # logger.debug(r.request.body)
-            logger.debug(r.status_code)
-            logger.debug(r.text)
+            #logger.debug(r.status_code)
+            #logger.debug(r.text)
 
             if r.status_code == 200:
                 self.sid = r.json()["connect.sid"]
@@ -61,16 +61,16 @@ class Apex(object):
                 if postdata is None:
                     r = requests.get(f"{url}?_={str(round(time.time()))}", headers=headers)
                 else:
-                    logger.debug(postdata)
+                    #logger.debug(postdata)
                     r = requests.put(url, headers=headers, json=postdata)
 
-                logger.debug(r.status_code)
+                #logger.debug(r.status_code)
                 if r.status_code == 200:
                     result = r.json()
                 elif r.status_code == 401:
                     self.sid = None
-        if result is not None:
-            logger.debug(result)
+        #if result is not None:
+        #    logger.debug(result)
         return result
 
     def status(self) -> Optional[dict]:

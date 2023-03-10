@@ -149,7 +149,7 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
                     STATUS: await self._hass.async_add_executor_job(self.apex.status),
                     CONFIG: await self._hass.async_add_executor_job(self.apex.config)
                 }
-                # logger.debug("Refreshing Now")
+                logger.debug("Refreshing Now")
                 # logger.debug(data)
                 return data
         except Exception as ex:
