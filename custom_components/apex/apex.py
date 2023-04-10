@@ -171,7 +171,7 @@ class Apex(object):
                 # between doses, and "count" is always 255 (until otherwise modified)
                 inv_rate = 1.0 / rate
                 logger.info(f"dosing slow speed (1 ml / {inv_rate} mins)")
-                profile["data"] = {"mode": 21, "amount": 1, "time": inv_rate * 60, "count": 255}
+                profile["data"] = {"mode": 21, "amount": 1, "time": int(inv_rate * 60), "count": 255}
 
             # we set the profile to be what we need it to be so the user doesn't have to do
             # anything except choose the profile to use
