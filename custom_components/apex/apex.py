@@ -164,7 +164,7 @@ class Apex(object):
                     logger.error(f"Requested rate ({rate} mL / min) exceeds the supported range (limit {int(pump_speeds[0] / safety_margin)} mL / min).")
                     return None
             else:
-                # handle 0 < rate < 0.5ml/min by dosing over multiple minutes, for example,
+                # handle 0 < rate < min_rate by dosing over multiple minutes, for example,
                 # 15ml per day = 15ml / 1440 mins or 0.0104 ml/min, instead, we want 1 / rate to
                 # dose one ml every 96 minutes.
                 # "mode" is 21 (the slowest speed), "amount" is 1, "time" is the number of minutes
