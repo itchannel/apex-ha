@@ -1,4 +1,8 @@
 ## **Changelog**
+## Version 1.11
+- Added ability to update firmware of Apex device via HA
+- Fixed IOT and polling class types
+
 ## Version 1.10
 - Dos control service (@brettonw)
 - Error handling fixes (@brettonw)

@@ -6,11 +6,12 @@
     "dependencies": [],
     "documentation": "https://github.com/itchannel/apex-ha",
     "homekit": {},
-    "iot_class": "cloud_polling",
+    "integration_type": "device",
+    "iot_class": "local_polling",
     "issue_tracker": "https://github.com/itchannel/apex-ha/issues",
     "loggers": ["custom_components.apex"],
     "requirements": [],
     "ssdp": [],
-    "version": "1.0.10",
+    "version": "1.11",
     "zeroconf": []
   }
