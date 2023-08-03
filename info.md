@@ -2,6 +2,9 @@
 ## Version 1.10
 - Dos control service (@brettonw)
 - Error handling fixes (@brettonw)
+- Added open source license
+- Fix "TEST" error on HA 2023.8
+- Add translation strings for services HA 2023.8
 
 ## Version 1.09
 
