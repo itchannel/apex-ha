@@ -142,6 +142,23 @@ class Apex(object):
         _LOGGER.debug(data)
         return data
 
+    def toggle_feed_cycle(self, did, state):
+        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
+        if state == "ON":
+            data = {"active": 1, "errorCode": 0, "errorMessage": "", "name": did}
+
+            r = requests.put("http://" + self.deviceip + "/rest/status/feed/" + did, headers=headers, json=data)
+        elif state == "OFF":
+            data = {"active": 92, "errorCode": 0, "errorMessage": "", "name": 0}
+            _LOGGER.debug(data)
+
+            r = requests.put("http://" + self.deviceip + "/rest/status/feed/0" , headers=headers, json=data)
+        _LOGGER.debug(data)
+
+        data = r.json()
+        _LOGGER.debug(data)
+        return data
+
     def set_variable(self, did, code):
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         config = self.config()

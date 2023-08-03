@@ -10,8 +10,16 @@ SWITCHES = {
     "24v": {"icon": "mdi:home-lightning-bolt-outline"},
     "dos": {"icon": "mdi:test-tube"},
     "virtual": {"icon": "mdi:monitor-account"},
-    "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump"}
+    "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump"},
+    "Feed" :  {"icon": "mdi:shaker"}
     }
+
+FEED_CYCLES = [
+    {"did": "1", "name": "Feed A", "type": "Feed"},
+    {"did": "2", "name": "Feed B", "type": "Feed"},
+    {"did": "3", "name": "Feed C", "type": "Feed"},
+    {"did": "4", "name": "Feed D", "type": "Feed"}
+    ]
 
 SENSORS = {
     "Temp": {"icon": "mdi:water-thermometer", "measurement": "°C"},
