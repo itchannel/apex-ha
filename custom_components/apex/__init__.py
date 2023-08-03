@@ -190,16 +190,7 @@ class ApexEntity(CoordinatorEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_install(
-        self, version: str | None, backup: bool, **kwargs: Any
-    ) -> None:
-        """Install an update."""
-        try:
-            await self.coordinator.apex.update_firmware()
-        except Exception as err:
-            raise HomeAssistantError("Error while updating firmware")
 
-        await self.coordinator.async_refresh()
     @property
     def name(self):
         """Return the name of the entity."""

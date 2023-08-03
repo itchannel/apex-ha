@@ -8,6 +8,8 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 
+from homeassistant.exceptions import HomeAssistantError
+
 from . import ApexEntity
 
 from .const import DOMAIN, SENSORS, MEASUREMENTS
@@ -42,6 +44,17 @@ class ApexUpdate(
         self._device_id = "apex_" + sensor
         # Required for HA 2022.7
         self.coordinator_context = object()
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: any
+    ) -> None:
+        """Install an update."""
+        try:
+            await self.coordinator.apex.update_firmware()
+        except Exception as err:
+            raise HomeAssistantError("Error while updating firmware")
+
+        await self.coordinator.async_refresh()
 
     @property
     def installed_version(self): 

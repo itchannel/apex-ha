@@ -1,4 +1,6 @@
 ## **Changelog**
+## Version 1.12
+- Fix "any" bug on device update
 ## Version 1.11
 - Added ability to update firmware of Apex device via HA
 - Fixed IOT and polling class types
