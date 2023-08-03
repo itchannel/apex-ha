@@ -4,7 +4,7 @@ import re
 from homeassistant.helpers.entity import Entity
 
 from . import ApexEntity
-from .const import DOMAIN, SENSORS, MEASUREMENTS
+from .const import DOMAIN, SENSORS, MEASUREMENTS, MANUAL_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +20,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if value["type"] == "dos" or value["type"] == "variable" or value["type"] == "virtual" or value["type"] == "iotaPump|Sicce|Syncra":
             sensor = ApexSensor(entry, value, config_entry.options)
             async_add_entities([sensor], True)
+            
+
+    """Add Feed Status Remaining Time"""
+    for value in MANUAL_SENSORS:
+        sensor = ApexSensor(entry, value, config_entry.options)
+        async_add_entities([sensor], True)
 
 
 class ApexSensor(
@@ -39,6 +45,11 @@ class ApexSensor(
     # Need to tidy this section up and avoid using so many for loops
     def get_value(self, ftype):
         if ftype == "state":
+            if self.sensor["type"] == "feed":
+                if self.coordinator.data["feed"]["active"] > 50000:
+                    return 0
+                else:
+                    return round(self.coordinator.data["feed"]["active"] / 60, 1)
             for value in self.coordinator.data["inputs"]:
                 if value["did"] == self.sensor["did"]:
                     return value["value"]

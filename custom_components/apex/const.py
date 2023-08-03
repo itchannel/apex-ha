@@ -21,6 +21,7 @@ FEED_CYCLES = [
     {"did": "4", "name": "Feed D", "type": "Feed"}
     ]
 
+
 SENSORS = {
     "Temp": {"icon": "mdi:water-thermometer", "measurement": "°C"},
     "Cond": {"icon": "mdi:shaker-outline", "measurement": "ppt"},
@@ -38,7 +39,12 @@ SENSORS = {
     "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump", "measurement": "%"},
     "variable" : {"icon" : "mdi:cog-outline"},
     "virtual" : {"icon" : "mdi:cog-outline"},
+    "feed" : {"icon": "mdi:timer", "measurement": "mins"}
 }
+
+MANUAL_SENSORS = [
+    {"name": "Feed Cycle Countdown", "type": "feed", "did": "feed_countdown"}
+]
 
 MEASUREMENTS = {
     "Celcius" : "°C",
