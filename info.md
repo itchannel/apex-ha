@@ -5,6 +5,7 @@
 - Added open source license
 - Fix "TEST" error on HA 2023.8
 - Add translation strings for services HA 2023.8
+- Enable HA debugging button for integration
 
 ## Version 1.09
 
