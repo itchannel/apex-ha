@@ -1,4 +1,6 @@
 ## **Changelog**
+## Version 1.13
+- Add Feed Cycle Switches
 ## Version 1.12
 - Fix "any" bug on device update
 ## Version 1.11

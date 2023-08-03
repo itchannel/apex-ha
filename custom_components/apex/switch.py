@@ -4,7 +4,7 @@ import time
 from homeassistant.components.switch import SwitchEntity
 
 from . import ApexEntity
-from .const import DOMAIN, SWITCHES
+from .const import DOMAIN, SWITCHES, FEED_CYCLES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,13 +17,18 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sw = Switch(entry, value, config_entry.options)
         async_add_entities([sw], False)
 
+    """Add Feed Cycle Switches"""
+    for value in FEED_CYCLES:
+        _LOGGER.debug(value)
+        sw = Switch(entry, value, config_entry.options)
+        async_add_entities([sw], False)
 
 
 class Switch(ApexEntity, SwitchEntity):
     """Define the Switch for turning ignition off/on"""
 
     def __init__(self, coordinator, switch, options):
-
+        _LOGGER.debug(switch)
         self._device_id = "apex_" + switch["did"]
         self.switch = switch
         self.coordinator = coordinator
@@ -32,29 +37,55 @@ class Switch(ApexEntity, SwitchEntity):
         self.coordinator_context = object()
 
     async def async_turn_on(self, **kwargs):
-            update = await self.coordinator.hass.async_add_executor_job(
-                self.coordinator.apex.toggle_output,
-                self.switch["did"],
-                "ON"
-            )
-            if update["status"][0] == "ON" or update["status"][0] == "AON":
-                self._state = True
-                self.switch["status"] = update["status"]
-                _LOGGER.debug("Writing state ON")
-                self.async_write_ha_state()
+            if self.switch["type"] == "Feed":
+                update = await self.coordinator.hass.async_add_executor_job(
+                    self.coordinator.apex.toggle_feed_cycle,
+                    self.switch["did"],
+                    "ON"
+                )
+                if update["active"] == 1:
+                    self._state = True
+                    #self.switch["status"] = update["status"]
+                    _LOGGER.debug("Writing state ON")
+                    self.async_write_ha_state()
+                    await self.coordinator.async_request_refresh()
+            else:
+                update = await self.coordinator.hass.async_add_executor_job(
+                    self.coordinator.apex.toggle_output,
+                    self.switch["did"],
+                    "ON"
+                )
+                if update["status"][0] == "ON" or update["status"][0] == "AON":
+                    self._state = True
+                    self.switch["status"] = update["status"]
+                    _LOGGER.debug("Writing state ON")
+                    self.async_write_ha_state()
 
            
     async def async_turn_off(self, **kwargs):
-            update = await self.coordinator.hass.async_add_executor_job(
-                self.coordinator.apex.toggle_output, 
-                self.switch["did"],
-                "OFF"
-            )
-            if update["status"][0] == "OFF" or update["status"][0] == "AOF":
-                self._state = False
-                self.switch["status"] = update["status"]
-                _LOGGER.debug("Writing state OFF")
-                self.async_write_ha_state()
+            if self.switch["type"] == "Feed":
+                update = await self.coordinator.hass.async_add_executor_job(
+                    self.coordinator.apex.toggle_feed_cycle,
+                    self.switch["did"],
+                    "OFF"
+                )
+                if update["active"] == 92:
+                    self._state = False
+                    #self.switch["status"] = update["status"]
+                    _LOGGER.debug("Writing state OFF")
+                    self.async_write_ha_state()
+                    await self.coordinator.async_request_refresh()
+            else:
+                update = await self.coordinator.hass.async_add_executor_job(
+                    self.coordinator.apex.toggle_output, 
+                    self.switch["did"],
+                    "OFF"
+                )
+                if update["status"][0] == "OFF" or update["status"][0] == "AOF":
+                    self._state = False
+                    self.switch["status"] = update["status"]
+                    _LOGGER.debug("Writing state OFF")
+                    self.async_write_ha_state()
 
     @property
     def name(self):
@@ -72,12 +103,18 @@ class Switch(ApexEntity, SwitchEntity):
         elif self._state == False:
             self._state = None
             return False
-        for value in self.coordinator.data["outputs"]:
-            if value["did"] == self.switch["did"]:
-                if value["status"][0] == "ON" or value["status"][0] == "AON":
-                    return True
-                else:
-                    return False
+        if self.switch["type"] == "Feed":
+            if self.coordinator.data["feed"]["name"] == int(self.switch["did"]):
+                return True
+            else:
+                return False                 
+        else:
+            for value in self.coordinator.data["outputs"]:
+                if value["did"] == self.switch["did"]:
+                    if value["status"][0] == "ON" or value["status"][0] == "AON":
+                        return True
+                    else:
+                        return False
 
 
 
