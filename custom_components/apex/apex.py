@@ -167,6 +167,22 @@ class Apex(object):
         _LOGGER.debug(r.text)
 
         return {"error": ""}
+    
+    def update_firmware(self):
+        headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
+        config = self.config()
+
+        nconf = config["nconf"]
+
+        nconf["updateFirmware"] = True
+
+        r = requests.put("http://" + self.deviceip + "/rest/config/nconf", headers=headers, json=nconf)
+        _LOGGER.debug(r.text)
+        _LOGGER.debug(r.status_code)
+        if (r.status_code == 200):
+            return True
+        else:
+            return False
 
     def set_dos_rate(self, did, profile_id, rate):
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
