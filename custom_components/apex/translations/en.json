@@ -27,5 +27,53 @@
                 "description": "Configure Controller Options"
             }
         }
+    },
+    "services": {
+        "set_output" : {
+            "name": "Set Output",
+            "description": "Set the value of an output on the controller e.g. setting the lights to AUTO (Automatic) instead of using the switch entity in HA which only supports OFF/ON",
+            "fields": {
+                "did": {
+                    "name": "DID",
+                    "description": "DID of selected output, can be obtained from attributes of the given switch in HA"
+                },
+                "setting": {
+                    "name": "Setting",
+                    "description": "Setting to set the output to e.g. ON/OFF/AUTO"
+                }
+            }
+        },
+        "set_variable": {
+            "name": "Set Variable",
+            "description": "Ability to program variables on the controller e.g. Set 75 (Only Advanced mode variables supported currently!!",
+            "fields": {
+                "did": {
+                    "name": "DID",
+                    "description": "DID of the selected variable or output to modify"
+                },
+                "code": {
+                    "name": "Code",
+                    "description": "Code to modify on the variable/output"
+                }
+            }
+        },
+        "set_dos_rate": {
+            "name": "Set DOS Rate",
+            "description": "Set the dosing rate for a DOS pump",
+            "fields": {
+                "did" : {
+                    "name": "DID",
+                    "description": "DID of the DOS pump"
+                },
+                "profile_id": {
+                    "name": "Profile ID",
+                    "description": "Profile ID to assign to the DOS pump, the integration will rename it appropriately."
+                },
+                "rate": {
+                    "name": "Rate",
+                    "description": "The desired dosing rate, in mL / min. (effective range is 0 - 125)"
+                }
+            }
+        }
     }
 }

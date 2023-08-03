@@ -1,4 +1,12 @@
 ## **Changelog**
+## Version 1.10
+- Dos control service (@brettonw)
+- Error handling fixes (@brettonw)
+- Added open source license
+- Fix "TEST" error on HA 2023.8
+- Add translation strings for services HA 2023.8
+- Enable HA debugging button for integration
+
 ## Version 1.09
 
 - Add set_variable service for setting programming code in variables e.g. "Set 75" 
