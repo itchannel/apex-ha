@@ -212,6 +212,5 @@ class ApexEntity(CoordinatorEntity):
             "name": f"Apex Controller ({self.coordinator.deviceip})",
             "hw_version": self.coordinator.data["system"]["hardware"],
             "sw_version": self.coordinator.data["system"]["software"],
-            "manufacturer": MANUFACTURER,
-            "test": "TEST"
+            "manufacturer": MANUFACTURER
         }

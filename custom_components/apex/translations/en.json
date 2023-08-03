@@ -51,7 +51,7 @@
                     "name": "DID",
                     "description": "DID of the selected variable or output to modify"
                 },
-                "Code": {
+                "code": {
                     "name": "Code",
                     "description": "Code to modify on the variable/output"
                 }
