@@ -28,7 +28,7 @@ class Apex(object):
         # Try logging in 3 times due to controller timeout
         login = 0
         while login < 3:
-            r = requests.post("http://" + self.deviceip + "/rest/login", headers=headers, json=data)
+            r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers, json=data)
             # _LOGGER.debug(r.request.body)
             _LOGGER.debug(r.status_code)
             _LOGGER.debug(r.text)
@@ -43,15 +43,15 @@ class Apex(object):
                 print("Status code failure")
                 login += 1
 
-            # XXX does there need to be some sort of sleep here?
+            """Need to test different login speeds due to 401 errors"""
 
         return False
 
     def oldstatus(self):
-        # Function for returning information on old controllers (Currently not authenticated)
+        """Function for returning information on old controllers (Currently not authenticated)"""
         headers = {**defaultHeaders}
 
-        r = requests.get("http://" + self.deviceip + "/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
+        r = requests.get(f"http://{self.deviceip}/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
         xml = xmltodict.parse(r.text)
         # Code to convert old style to new style json
         result = {}
@@ -100,7 +100,7 @@ class Apex(object):
         i = 0
         while i <= 3:
             headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
-            r = requests.get("http://" + self.deviceip + "/rest/status?_=" + str(round(time.time())), headers=headers)
+            r = requests.get(f"http://{self.deviceip}/rest/status?_=" + str(round(time.time())), headers=headers)
             # _LOGGER.debug(r.text)
 
             if r.status_code == 200:
@@ -121,7 +121,7 @@ class Apex(object):
             self.auth()
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
 
-        r = requests.get("http://" + self.deviceip + "/rest/config?_=" + str(round(time.time())), headers=headers)
+        r = requests.get(f"http://{self.deviceip}/rest/config?_=" + str(round(time.time())), headers=headers)
         # _LOGGER.debug(r.text)
 
         if r.status_code == 200:
@@ -137,7 +137,7 @@ class Apex(object):
         data = {"did": did, "status": [state, "", "OK", ""], "type": "outlet"}
         _LOGGER.debug(data)
 
-        r = requests.put("http://" + self.deviceip + "/rest/status/outputs/" + did, headers=headers, json=data)
+        r = requests.put(f"http://{self.deviceip}/rest/status/outputs/" + did, headers=headers, json=data)
         data = r.json()
         _LOGGER.debug(data)
         return data
@@ -147,12 +147,12 @@ class Apex(object):
         if state == "ON":
             data = {"active": 1, "errorCode": 0, "errorMessage": "", "name": did}
 
-            r = requests.put("http://" + self.deviceip + "/rest/status/feed/" + did, headers=headers, json=data)
+            r = requests.put(f"http://{self.deviceip}/rest/status/feed/" + did, headers=headers, json=data)
         elif state == "OFF":
             data = {"active": 92, "errorCode": 0, "errorMessage": "", "name": 0}
             _LOGGER.debug(data)
 
-            r = requests.put("http://" + self.deviceip + "/rest/status/feed/0" , headers=headers, json=data)
+            r = requests.put(f"http://{self.deviceip}/rest/status/feed/0" , headers=headers, json=data)
         _LOGGER.debug(data)
 
         data = r.json()
@@ -180,7 +180,7 @@ class Apex(object):
         variable["prog"] = code
         _LOGGER.debug(variable)
 
-        r = requests.put("http://" + self.deviceip + "/rest/config/oconf/" + did, headers=headers, json=variable)
+        r = requests.put(f"http://{self.deviceip}/rest/config/oconf/" + did, headers=headers, json=variable)
         _LOGGER.debug(r.text)
 
         return {"error": ""}
@@ -193,7 +193,7 @@ class Apex(object):
 
         nconf["updateFirmware"] = True
 
-        r = requests.put("http://" + self.deviceip + "/rest/config/nconf", headers=headers, json=nconf)
+        r = requests.put(f"http://{self.deviceip}/rest/config/nconf", headers=headers, json=nconf)
         _LOGGER.debug(r.text)
         _LOGGER.debug(r.status_code)
         if (r.status_code == 200):

@@ -1,5 +1,4 @@
 import logging
-import time
 
 from homeassistant.components.switch import SwitchEntity
 
@@ -13,6 +12,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Switch from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
     
+    """Loop through and add all avaliable outputs"""
     for value in entry.data["outputs"]:
         sw = Switch(entry, value, config_entry.options)
         async_add_entities([sw], False)
@@ -45,7 +45,6 @@ class Switch(ApexEntity, SwitchEntity):
                 )
                 if update["active"] == 1:
                     self._state = True
-                    #self.switch["status"] = update["status"]
                     _LOGGER.debug("Writing state ON")
                     self.async_write_ha_state()
                     await self.coordinator.async_request_refresh()
