@@ -1,4 +1,7 @@
 ## **Changelog**
+## Version 1.14
+- Fix update error
+- Strip "L" from version information for certain devices
 ## Version 1.13
 - Add Feed Cycle Switches
 ## Version 1.12
