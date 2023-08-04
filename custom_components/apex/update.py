@@ -1,5 +1,6 @@
+import asyncio
 import logging
-import re
+
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -12,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import ApexEntity
 
-from .const import DOMAIN, SENSORS, MEASUREMENTS
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 FIRMWARE_UPDATE_ENTITY = UpdateEntityDescription(
@@ -42,7 +43,7 @@ class ApexUpdate(
         self._attr = {}
         self.coordinator = coordinator
         self._device_id = "apex_" + sensor
-        # Required for HA 2022.7
+        """ Required for HA 2022.7 """
         self.coordinator_context = object()
 
     async def async_install(
@@ -50,15 +51,25 @@ class ApexUpdate(
     ) -> None:
         """Install an update."""
         try:
-            await self.coordinator.apex.update_firmware()
+            data = await self.coordinator._hass.async_add_executor_job(self.coordinator.apex.update_firmware)
+            if data == True:
+                _LOGGER.debug("Update Triggered, waiting ")
+                for progress in range(0, 100, 10):
+                    self._attr_in_progress = progress
+                    self.async_write_ha_state()
+                    """ Apex official UI just has a sleep timer as the device goes completely unresponsive during update so update
+                        has been set to wait 100 seconds before completing unless device comes back online first """
+                    await asyncio.sleep(10)
+            else:
+                raise HomeAssistantError("Firmware Update Failed")
         except Exception as err:
             raise HomeAssistantError("Error while updating firmware")
-
+        self._attr_in_progress = False
         await self.coordinator.async_refresh()
 
     @property
     def installed_version(self): 
-        return self.coordinator.data["system"]["software"]
+        return self.coordinator.data["system"]["software"].replace("L", "")
     
     @property
     def latest_version(self):
