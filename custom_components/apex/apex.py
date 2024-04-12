@@ -25,6 +25,40 @@ class Apex(object):
     def auth(self):
         headers = {**defaultHeaders}
         data = {"login": self.username, "password": self.password, "remember_me": False}
+        login = 0
+        while login < 3:
+            r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers, json=data)
+
+            # Detailed logging
+            _LOGGER.debug(f"Attempt {login + 1}: Sending POST request to http://{self.deviceip}/rest/login")
+            _LOGGER.debug(f"Request headers: {headers}")
+            _LOGGER.debug(f"Request payload: {data}")
+            _LOGGER.debug(f"Response status code: {r.status_code}")
+            _LOGGER.debug(f"Response body: {r.text}")
+
+            if r.status_code == 200:
+                self.sid = r.json().get("connect.sid", None)
+                if self.sid:
+                    _LOGGER.debug(f"Successfully authenticated. Session ID: {self.sid}")
+                    return True
+                else:
+                    _LOGGER.error("Session ID missing in the response.")
+            elif r.status_code == 404:
+                self.version = "old"
+                _LOGGER.info("Detected old version of the device software.")
+                return True
+            else:
+                _LOGGER.warning(f"Failed to authenticate. Status code: {r.status_code}")
+
+            login += 1
+            _LOGGER.info(f"Retrying authentication... Attempt #{login + 1}")
+
+        _LOGGER.error("Authentication failed after 3 attempts.")
+        return False
+
+    def authOrig(self):
+        headers = {**defaultHeaders}
+        data = {"login": self.username, "password": self.password, "remember_me": False}
         # Try logging in 3 times due to controller timeout
         login = 0
         while login < 3:
