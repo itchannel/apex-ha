@@ -1,7 +1,7 @@
 ## **Changelog**
 
-## Version 1.14.1
- - Debug for Login
+## Version 1.14.2
+ - Debug Login and Added Basic Auth FallBack
 
 ## Version 1.14
 - Fix update error

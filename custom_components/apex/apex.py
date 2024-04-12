@@ -2,6 +2,7 @@ import logging
 import requests
 import time
 import xmltodict
+import base64
 
 defaultHeaders = {
     "Accept": "*/*",
@@ -25,21 +26,19 @@ class Apex(object):
     def auth(self):
         headers = {**defaultHeaders}
         data = {"login": self.username, "password": self.password, "remember_me": False}
-        login = 0
-        while login < 3:
+        login_attempt = 0
+
+        while login_attempt < 3:
             r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers, json=data)
 
-            # Detailed logging
-            _LOGGER.debug(f"Attempt {login + 1}: Sending POST request to http://{self.deviceip}/rest/login")
-            _LOGGER.debug(f"Request headers: {headers}")
-            _LOGGER.debug(f"Request payload: {data}")
+            _LOGGER.debug(f"Attempt {login_attempt + 1}: Sending POST request to http://{self.deviceip}/rest/login")
             _LOGGER.debug(f"Response status code: {r.status_code}")
             _LOGGER.debug(f"Response body: {r.text}")
 
             if r.status_code == 200:
                 self.sid = r.json().get("connect.sid", None)
                 if self.sid:
-                    _LOGGER.debug(f"Successfully authenticated. Session ID: {self.sid}")
+                    _LOGGER.debug(f"Successfully authenticated with session. Session ID: {self.sid}")
                     return True
                 else:
                     _LOGGER.error("Session ID missing in the response.")
@@ -47,38 +46,29 @@ class Apex(object):
                 self.version = "old"
                 _LOGGER.info("Detected old version of the device software.")
                 return True
+            elif r.status_code != 401:
+                _LOGGER.warning(f"Unexpected status code: {r.status_code}")
             else:
-                _LOGGER.warning(f"Failed to authenticate. Status code: {r.status_code}")
+                _LOGGER.info(f"Basic Auth attempt because of 401 error")
+                # Basic Auth fallback
+                basic_auth_header = base64.b64encode(f"{self.username}:{self.password}".encode()).decode('utf-8')
+                headers['Authorization'] = f"Basic {basic_auth_header}"
+                r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers)
 
-            login += 1
-            _LOGGER.info(f"Retrying authentication... Attempt #{login + 1}")
+                _LOGGER.debug(f"Basic Auth Response status code: {r.status_code}")
+                _LOGGER.debug(f"Basic Auth Response body: {r.text}")
+
+                if r.status_code == 200:
+                    _LOGGER.info("Successfully authenticated using Basic Auth.")
+                    return True
+                else:
+                    _LOGGER.error("Failed to authenticate using both methods.")
+
+            login_attempt += 1
+            if login_attempt < 3:
+                _LOGGER.info(f"Retrying authentication... Attempt #{login_attempt + 1}")
 
         _LOGGER.error("Authentication failed after 3 attempts.")
-        return False
-
-    def authOrig(self):
-        headers = {**defaultHeaders}
-        data = {"login": self.username, "password": self.password, "remember_me": False}
-        # Try logging in 3 times due to controller timeout
-        login = 0
-        while login < 3:
-            r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers, json=data)
-            # _LOGGER.debug(r.request.body)
-            _LOGGER.debug(r.status_code)
-            _LOGGER.debug(r.text)
-
-            if r.status_code == 200:
-                self.sid = r.json()["connect.sid"]
-                return True
-            if r.status_code == 404:
-                self.version = "old"
-                return True
-            else:
-                print("Status code failure")
-                login += 1
-
-            """Need to test different login speeds due to 401 errors"""
-
         return False
 
     def oldstatus(self):
