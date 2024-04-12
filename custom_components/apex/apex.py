@@ -59,6 +59,7 @@ class Apex(object):
                 _LOGGER.debug(f"Basic Auth Response body: {r.text}")
 
                 if r.status_code == 200:
+                    self.version = "old"
                     _LOGGER.info("Successfully authenticated using Basic Auth.")
                     return True
                 else:
