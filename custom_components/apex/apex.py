@@ -60,6 +60,7 @@ class Apex(object):
 
                 if r.status_code == 200:
                     self.version = "old"
+                    self.sid = f"Basic {basic_auth_header}"
                     _LOGGER.info("Successfully authenticated using Basic Auth.")
                     return True
                 else:
@@ -75,6 +76,7 @@ class Apex(object):
     def oldstatus(self):
         """Function for returning information on old controllers (Currently not authenticated)"""
         headers = {**defaultHeaders}
+        headers['Authorization'] = self.sid
 
         r = requests.get(f"http://{self.deviceip}/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
         xml = xmltodict.parse(r.text)
@@ -122,6 +124,7 @@ class Apex(object):
         if self.version == "old":
             result = self.oldstatus()
             return result
+
         i = 0
         while i <= 3:
             headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
