@@ -1,6 +1,6 @@
 ## **Changelog**
 
-## Version 1.14.2
+## Version 1.14.3
  - Debug Login and Added Basic Auth FallBack
 
 ## Version 1.14

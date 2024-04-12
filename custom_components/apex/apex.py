@@ -53,7 +53,7 @@ class Apex(object):
                 # Basic Auth fallback
                 basic_auth_header = base64.b64encode(f"{self.username}:{self.password}".encode()).decode('utf-8')
                 headers['Authorization'] = f"Basic {basic_auth_header}"
-                r = requests.post(f"http://{self.deviceip}/rest/login", headers=headers)
+                r = requests.post(f"http://{self.deviceip}/", headers=headers)
 
                 _LOGGER.debug(f"Basic Auth Response status code: {r.status_code}")
                 _LOGGER.debug(f"Basic Auth Response body: {r.text}")
