@@ -1,4 +1,8 @@
 ## **Changelog**
+
+## Version 1.14.1
+ - Debug for Login
+
 ## Version 1.14
 - Fix update error
 - Strip "L" from version information for certain devices
