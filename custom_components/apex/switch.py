@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Add the Switch from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
-
+    
     """Loop through and add all avaliable outputs"""
     for value in entry.data["outputs"]:
         sw = Switch(entry, value, config_entry.options)
@@ -61,7 +61,7 @@ class Switch(ApexEntity, SwitchEntity):
                     _LOGGER.debug("Writing state ON")
                     self.async_write_ha_state()
 
-
+           
     async def async_turn_off(self, **kwargs):
             if self.switch["type"] == "Feed":
                 update = await self.coordinator.hass.async_add_executor_job(
@@ -77,7 +77,7 @@ class Switch(ApexEntity, SwitchEntity):
                     await self.coordinator.async_request_refresh()
             else:
                 update = await self.coordinator.hass.async_add_executor_job(
-                    self.coordinator.apex.toggle_output,
+                    self.coordinator.apex.toggle_output, 
                     self.switch["did"],
                     "OFF"
                 )
@@ -122,7 +122,6 @@ class Switch(ApexEntity, SwitchEntity):
                         return True
                     else:
                         return False
-
 
 
 

@@ -44,61 +44,51 @@ class ApexSensor(
 
     # Need to tidy this section up and avoid using so many for loops
     def get_value(self, ftype):
-        try:
-            if ftype == "state":
-                sensor_type = self.sensor.get("type")
-                sensor_did = self.sensor.get("did")
-
-                if sensor_type == "feed":
-                    active = self.coordinator.data.get("feed", {}).get("active", 0)
-                    if isinstance(active, int) and active > 50000:
+        if ftype == "state":
+            if self.sensor["type"] == "feed":
+                if "feed" in self.coordinator.data and "active" in self.coordinator.data["feed"]:
+                    if self.coordinator.data["feed"]["active"] > 50000:
                         return 0
-                    elif isinstance(active, (int, float)):
-                        return round(active / 60, 1)
-
-                for value in self.coordinator.data.get("inputs", []):
-                    if value.get("did") == sensor_did:
-                        return value.get("value")
-
-                for value in self.coordinator.data.get("outputs", []):
-                    if value.get("did") == sensor_did:
-                        if sensor_type == "dos":
-                            return value.get("status", [None] * 5)[4]
-                        if sensor_type in ["iotaPump|Sicce|Syncra"]:
-                            return value.get("status", [None] * 2)[1]
-                        if sensor_type in ["virtual", "variable"]:
-                            for config in self.coordinator.data.get("config", {}).get("oconf", []):
-                                if config.get("did") == sensor_did:
-                                    ctype = config.get("ctype")
-                                    if ctype == "Advanced":
-                                        return self.process_prog(config.get("prog"))
+                    else:
+                        return round(self.coordinator.data["feed"]["active"] / 60, 1)
+                else:
+                    return 0
+            for value in self.coordinator.data["inputs"]:
+                if value["did"] == self.sensor["did"]:
+                    return value["value"]
+            for value in self.coordinator.data["outputs"]:
+                if value["did"] == self.sensor["did"]:
+                    if self.sensor["type"] == "dos":
+                        return value["status"][4]
+                    if self.sensor["type"] == "iotaPump|Sicce|Syncra":
+                        return value["status"][1]
+                    if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
+                        if "config" in self.coordinator.data:
+                            for config in self.coordinator.data["config"]["oconf"]:
+                                if config["did"] == self.sensor["did"]:
+                                    if config["ctype"] == "Advanced":
+                                        return self.process_prog(config["prog"])
                                     else:
                                         return "Not an Advanced variable!"
-
-            elif ftype == "attributes":
-
-                sensor_type = self.sensor.get("type")
-                sensor_did = self.sensor.get("did")
-
-                for value in self.coordinator.data.get("inputs", []):
-                        if value.get("did") == sensor_did:
+                    
+        if ftype == "attributes":
+            for value in self.coordinator.data["inputs"]:
+                if value["did"] == self.sensor["did"]:
+                    return value
+            for value in self.coordinator.data["outputs"]:
+                if value["did"] == self.sensor["did"]:
+                    if self.sensor["type"] == "dos":
+                        return value
+                    if self.sensor["type"] == "iotaPump|Sicce|Syncra":
+                        return value
+                    if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
+                        if "config" in self.coordinator.data:
+                            for config in self.coordinator.data["config"]["oconf"]:
+                                if config["did"] == self.sensor["did"]: 
+                                    return config
+                        else:
                             return value
-                    for value in self.coordinator.data.get("outputs", []):
-                        if value.get("did") == sensor_did:
-                            if sensor_type == "dos":
-                                return value
-                            if sensor_type in ["iotaPump|Sicce|Syncra"]:
-                                return value
-                            if sensor_type in ["virtual", "variable"]:
-                                return self.coordinator.data.get("config", {}).get("oconf", [value]).get(0)
-
-        except Exception as e:
-            # Log the exception and return None or a default value
-            import logging
-            _LOGGER = logging.getLogger(__name__)
-            _LOGGER.error(f"Error in get_value [{ftype}]: {e}")
-            return None
-
+    
     def process_prog(self, prog):
         if "Set PF" in prog:
             return prog
