@@ -74,7 +74,61 @@ class Apex(object):
         _LOGGER.error("Authentication failed after 3 attempts.")
         return False
 
+
     def oldstatus(self):
+        headers = {**defaultHeaders}
+        headers['Authorization'] = self.sid
+
+        r = requests.get(f"http://{self.deviceip}/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
+        _LOGGER.debug(f"oldstatus: Response status code: {r.status_code}")
+        _LOGGER.debug(f"oldstatus: Response body: {r.text}")
+
+        xml = xmltodict.parse(r.text)
+        _LOGGER.debug("oldstatus: XML parsed successfully")
+
+        result = {}
+        system = {}
+        system["software"] = xml["status"]["@software"]
+        system["hardware"] = xml["status"]["@hardware"] + " Legacy Version (Status.xml)"
+        result["system"] = system
+        _LOGGER.debug(f"oldstatus: system: {system}")
+
+        inputs = []
+        # Ensure the 'probe' key exists and is a list
+        probes = xml["status"]["probes"].get("probe", [])
+        if not isinstance(probes, list):
+            probes = [probes]  # Make it a single-item list if it's not a list
+
+        for value in probes:
+            inputdata = {}
+            inputdata["did"] = "base_" + value["name"]
+            inputdata["name"] = value["name"]
+            # Using get to provide a default value of 'variable' if 'type' is not found
+            inputdata["type"] = value.get("type", "variable")
+            inputdata["value"] = value["value"].strip()  # Also stripping any whitespace from the value
+            inputs.append(inputdata)
+
+        result["inputs"] = inputs
+        _LOGGER.debug(f"oldstatus: inputs: {inputs}")
+
+        outputs = []
+        for value in xml["status"]["outlets"]["outlet"]:
+            outputdata = {}
+            outputdata["did"] = value["deviceID"]
+            outputdata["name"] = value["name"]
+            outputdata["status"] = [value["state"], "", "OK", ""]
+            outputdata["id"] = value["outputID"]
+            outputdata["type"] = "outlet"
+            outputs.append(outputdata)
+
+        result["outputs"] = outputs
+        _LOGGER.debug(f"oldstatus: outputs: {outputs}")
+
+        _LOGGER.debug(f"oldstatus result: {result}")
+        return result
+
+
+    def orig_oldstatus(self):
         """Function for returning information on old controllers (Currently not authenticated)"""
         headers = {**defaultHeaders}
         headers['Authorization'] = self.sid
