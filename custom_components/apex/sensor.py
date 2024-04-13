@@ -42,7 +42,7 @@ class ApexSensor(
         # Required for HA 2022.7
         self.coordinator_context = object()
 
-
+    # Need to tidy this section up and avoid using so many for loops
     def get_value(self, ftype):
         try:
             if ftype == "state":
@@ -76,70 +76,29 @@ class ApexSensor(
                                         return "Not an Advanced variable!"
 
             elif ftype == "attributes":
+
+                sensor_type = self.sensor.get("type")
+                sensor_did = self.sensor.get("did")
+
                 for value in self.coordinator.data.get("inputs", []):
-                    if value.get("did") == sensor_did:
-                        return value
-                for value in self.coordinator.data.get("outputs", []):
-                    if value.get("did") == sensor_did:
-                        if sensor_type == "dos":
+                        if value.get("did") == sensor_did:
                             return value
-                        if sensor_type in ["iotaPump|Sicce|Syncra"]:
-                            return value
-                        if sensor_type in ["virtual", "variable"]:
-                            return self.coordinator.data.get("config", {}).get("oconf", [value]).get(0)
+                    for value in self.coordinator.data.get("outputs", []):
+                        if value.get("did") == sensor_did:
+                            if sensor_type == "dos":
+                                return value
+                            if sensor_type in ["iotaPump|Sicce|Syncra"]:
+                                return value
+                            if sensor_type in ["virtual", "variable"]:
+                                return self.coordinator.data.get("config", {}).get("oconf", [value]).get(0)
 
         except Exception as e:
             # Log the exception and return None or a default value
             import logging
             _LOGGER = logging.getLogger(__name__)
-            _LOGGER.error(f"Error in get_value: {e}")
+            _LOGGER.error(f"Error in get_value [{ftype}]: {e}")
             return None
 
-
-    # Need to tidy this section up and avoid using so many for loops
-    def old_get_value(self, ftype):
-        if ftype == "state":
-            if self.sensor["type"] == "feed":
-                if self.coordinator.data["feed"]["active"] > 50000:
-                    return 0
-                else:
-                    return round(self.coordinator.data["feed"]["active"] / 60, 1)
-            for value in self.coordinator.data["inputs"]:
-                if value["did"] == self.sensor["did"]:
-                    return value["value"]
-            for value in self.coordinator.data["outputs"]:
-                if value["did"] == self.sensor["did"]:
-                    if self.sensor["type"] == "dos":
-                        return value["status"][4]
-                    if self.sensor["type"] == "iotaPump|Sicce|Syncra":
-                        return value["status"][1]
-                    if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
-                        if "config" in self.coordinator.data:
-                            for config in self.coordinator.data["config"]["oconf"]:
-                                if config["did"] == self.sensor["did"]:
-                                    if config["ctype"] == "Advanced":
-                                        return self.process_prog(config["prog"])
-                                    else:
-                                        return "Not an Advanced variable!"
-
-        if ftype == "attributes":
-            for value in self.coordinator.data["inputs"]:
-                if value["did"] == self.sensor["did"]:
-                    return value
-            for value in self.coordinator.data["outputs"]:
-                if value["did"] == self.sensor["did"]:
-                    if self.sensor["type"] == "dos":
-                        return value
-                    if self.sensor["type"] == "iotaPump|Sicce|Syncra":
-                        return value
-                    if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
-                        if "config" in self.coordinator.data:
-                            for config in self.coordinator.data["config"]["oconf"]:
-                                if config["did"] == self.sensor["did"]:
-                                    return config
-                        else:
-                            return value
-    
     def process_prog(self, prog):
         if "Set PF" in prog:
             return prog

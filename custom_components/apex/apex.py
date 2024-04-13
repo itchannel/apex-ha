@@ -3,6 +3,7 @@ import requests
 import time
 import xmltodict
 import base64
+import json
 
 defaultHeaders = {
     "Accept": "*/*",
@@ -22,6 +23,7 @@ class Apex(object):
         self.deviceip = deviceip
         self.sid = None
         self.version = "new"
+        self.did_map = {}
 
     def auth(self):
         headers = {**defaultHeaders}
@@ -120,6 +122,7 @@ class Apex(object):
             outputdata["id"] = value["outputID"]
             outputdata["type"] = "outlet"
             outputs.append(outputdata)
+            self.did_map[value["deviceID"]] = value["name"]
 
         result["outputs"] = outputs
         # _LOGGER.debug(f"oldstatus: outputs: {outputs}")
@@ -170,9 +173,51 @@ class Apex(object):
         if r.status_code == 200:
             return r.json()
         else:
-            print("Error occured")
+            print("Error occurred")
 
     def toggle_output(self, did, state):
+
+        _LOGGER.debug(f"toggle_output [{self.version}]: did[{did}] state[{state}]")
+
+        if self.version == "old":
+            headers = {**defaultHeaders}
+            headers['Authorization'] = self.sid
+            headers['Content-Type'] = 'application/x-www-form-urlencoded'
+
+            # 1 = OFF, 0 = AUTO, 2 = ON
+            state_value = 1
+            ret_state = "OFF"
+            if state == "ON":
+                state_value = 2
+                ret_state = "ON"
+            if state == "AOF":
+                state_value = 0
+                ret_state = "OFF"
+            if state == "AON":
+                state_value = 0
+                ret_state = "ON"
+
+            object_name = self.did_map[did]
+
+            data = f"{object_name}_state={state_value}&noResponse=1"
+            _LOGGER.debug(f"toggle_output [old] Out Data: {data}")
+
+            headers['Content-Length'] = f"{len(data)}"
+            _LOGGER.debug(f"toggle_output [old] Headers: {headers}")
+
+            try:
+                url = f"http://{self.deviceip}/cgi-bin/status.cgi"
+                r = requests.post(url, headers=headers, data=data, proxies={"http": None, "https": None})
+                _LOGGER.debug(f"toggle_output [old] ({r.status_code}): {r.text}")
+            except Exception as e:
+                _LOGGER.debug(f"toggle_output [old] Exception: {e}")
+
+            status_data = {
+                "status": [ret_state],
+            }
+            return status_data
+
+
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
 
         # I gave this "type": "outlet" a bit of side-eye, but it seems to be fine even if the
@@ -186,6 +231,7 @@ class Apex(object):
         return data
 
     def toggle_feed_cycle(self, did, state):
+
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         if state == "ON":
             data = {"active": 1, "errorCode": 0, "errorMessage": "", "name": did}
@@ -203,6 +249,9 @@ class Apex(object):
         return data
 
     def set_variable(self, did, code):
+        if self.version == "old":
+            return {"error": "Not available on Apex Classic"}
+
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         config = self.config()
         variable = None
@@ -229,6 +278,9 @@ class Apex(object):
         return {"error": ""}
     
     def update_firmware(self):
+        if self.version == "old":
+            return {"error": "Not available on Apex Classic"}
+
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         config = self.config()
 
@@ -245,6 +297,10 @@ class Apex(object):
             return False
 
     def set_dos_rate(self, did, profile_id, rate):
+
+        if self.version == "old":
+            return {"error": "Not available on Apex Classic"}
+
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         config = self.config()
 
