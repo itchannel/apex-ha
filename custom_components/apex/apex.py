@@ -81,17 +81,17 @@ class Apex(object):
 
         r = requests.get(f"http://{self.deviceip}/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
         _LOGGER.debug(f"oldstatus: Response status code: {r.status_code}")
-        _LOGGER.debug(f"oldstatus: Response body: {r.text}")
+        # _LOGGER.debug(f"oldstatus: Response body: {r.text}")
 
         xml = xmltodict.parse(r.text)
-        _LOGGER.debug("oldstatus: XML parsed successfully")
+        # _LOGGER.debug("oldstatus: XML parsed successfully")
 
         result = {}
         system = {}
         system["software"] = xml["status"]["@software"]
         system["hardware"] = xml["status"]["@hardware"] + " Legacy Version (Status.xml)"
         result["system"] = system
-        _LOGGER.debug(f"oldstatus: system: {system}")
+        # _LOGGER.debug(f"oldstatus: system: {system}")
 
         inputs = []
         # Ensure the 'probe' key exists and is a list
@@ -109,7 +109,7 @@ class Apex(object):
             inputs.append(inputdata)
 
         result["inputs"] = inputs
-        _LOGGER.debug(f"oldstatus: inputs: {inputs}")
+        # _LOGGER.debug(f"oldstatus: inputs: {inputs}")
 
         outputs = []
         for value in xml["status"]["outlets"]["outlet"]:
@@ -122,66 +122,9 @@ class Apex(object):
             outputs.append(outputdata)
 
         result["outputs"] = outputs
-        _LOGGER.debug(f"oldstatus: outputs: {outputs}")
+        # _LOGGER.debug(f"oldstatus: outputs: {outputs}")
 
         _LOGGER.debug(f"oldstatus result: {result}")
-        return result
-
-
-    def orig_oldstatus(self):
-        """Function for returning information on old controllers (Currently not authenticated)"""
-        headers = {**defaultHeaders}
-        headers['Authorization'] = self.sid
-
-        r = requests.get(f"http://{self.deviceip}/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
-
-        _LOGGER.debug(f"oldstatus: Response status code: {r.status_code}")
-        # _LOGGER.debug(f"oldstatus: Response body: {r.text}")
-
-        try:
-            xml = xmltodict.parse(r.text)
-        except Exception as e:
-            _LOGGER.error(f"Error parsing XML: {e}")
-            return None
-
-        _LOGGER.debug("oldstatus: XML parsed successfully")
-
-        # Code to convert old style to new style json
-        result = {}
-        system = {}
-        system["software"] = xml["status"]["@software"]
-        system["hardware"] = xml["status"]["@hardware"] + " Legacy Version (Status.xml)"
-
-        result["system"] = system
-        _LOGGER.debug(f"oldstatus: system:{system}")
-
-        inputs = []
-        for value in xml["status"]["probes"]["probe"]:
-            inputdata = {}
-            inputdata["did"] = "base_" + value["name"]
-            inputdata["name"] = value["name"]
-            inputdata["type"] = value["type"]
-            inputdata["value"] = value["value"]
-            inputs.append(inputdata)
-
-        result["inputs"] = inputs
-        _LOGGER.debug(f"oldstatus: inputs:{inputs}")
-
-        outputs = []
-        for value in xml["status"]["outlets"]["outlet"]:
-            _LOGGER.debug(value)
-            outputdata = {}
-            outputdata["did"] = value["deviceID"]
-            outputdata["name"] = value["name"]
-            outputdata["status"] = [value["state"], "", "OK", ""]
-            outputdata["id"] = value["outputID"]
-            outputdata["type"] = "outlet"
-            outputs.append(outputdata)
-
-        result["outputs"] = outputs
-        _LOGGER.debug(f"oldstatus: outputs:{outputs}")
-
-        _LOGGER.debug(f"oldStauts result: {result}")
         return result
 
     def status(self):
@@ -215,6 +158,7 @@ class Apex(object):
         if self.version == "old":
             result = {}
             return result
+
         if self.sid is None:
             _LOGGER.debug("We are none")
             self.auth()
