@@ -12,6 +12,6 @@
     "loggers": ["custom_components.apex"],
     "requirements": [],
     "ssdp": [],
-    "version": "1.14.6",
+    "version": "1.14.7",
     "zeroconf": []
   }

@@ -33,7 +33,7 @@ class Apex(object):
 
             _LOGGER.debug(f"Attempt {login_attempt + 1}: Sending POST request to http://{self.deviceip}/rest/login")
             _LOGGER.debug(f"Response status code: {r.status_code}")
-            _LOGGER.debug(f"Response body: {r.text}")
+            # _LOGGER.debug(f"Response body: {r.text}")
 
             if r.status_code == 200:
                 self.sid = r.json().get("connect.sid", None)
@@ -56,12 +56,13 @@ class Apex(object):
                 r = requests.post(f"http://{self.deviceip}/", headers=headers)
 
                 _LOGGER.debug(f"Basic Auth Response status code: {r.status_code}")
-                _LOGGER.debug(f"Basic Auth Response body: {r.text}")
+                # _LOGGER.debug(f"Basic Auth Response body: {r.text}")
 
                 if r.status_code == 200:
                     self.version = "old"
                     self.sid = f"Basic {basic_auth_header}"
                     _LOGGER.info("Successfully authenticated using Basic Auth.")
+                    _LOGGER.debug(f"Basic Auth SID: {self.sid}")
                     return True
                 else:
                     _LOGGER.error("Failed to authenticate using both methods.")
@@ -81,7 +82,7 @@ class Apex(object):
         r = requests.get(f"http://{self.deviceip}/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
 
         _LOGGER.debug(f"oldstatus: Response status code: {r.status_code}")
-        _LOGGER.debug(f"oldstatus: Response body: {r.text}")
+        # _LOGGER.debug(f"oldstatus: Response body: {r.text}")
 
         xml = xmltodict.parse(r.text)
         # Code to convert old style to new style json
@@ -116,7 +117,7 @@ class Apex(object):
 
         result["outputs"] = outputs
 
-        _LOGGER.debug(result)
+        _LOGGER.debug(f"oldStauts result: {result}")
         return result
 
     def status(self):
