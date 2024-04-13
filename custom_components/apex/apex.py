@@ -79,6 +79,10 @@ class Apex(object):
         headers['Authorization'] = self.sid
 
         r = requests.get(f"http://{self.deviceip}/cgi-bin/status.xml?" + str(round(time.time())), headers=headers)
+
+        _LOGGER.debug(f"oldstatus: Response status code: {r.status_code}")
+        _LOGGER.debug(f"oldstatus: Response body: {r.text}")
+
         xml = xmltodict.parse(r.text)
         # Code to convert old style to new style json
         result = {}
@@ -116,7 +120,9 @@ class Apex(object):
         return result
 
     def status(self):
-        _LOGGER.debug(self.sid)
+
+        _LOGGER.debug(f"status grab for {self.version}: sid[{self.sid}]")
+
         if self.sid is None:
             _LOGGER.debug("We are none")
             self.auth()
