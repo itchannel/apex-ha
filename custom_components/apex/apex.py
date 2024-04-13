@@ -84,7 +84,14 @@ class Apex(object):
         _LOGGER.debug(f"oldstatus: Response status code: {r.status_code}")
         # _LOGGER.debug(f"oldstatus: Response body: {r.text}")
 
-        xml = xmltodict.parse(r.text)
+        try:
+            xml = xmltodict.parse(r.text)
+        except Exception as e:
+            _LOGGER.error(f"Error parsing XML: {e}")
+            return None
+
+        _LOGGER.debug("oldstatus: XML parsed successfully")
+
         # Code to convert old style to new style json
         result = {}
         system = {}
@@ -92,6 +99,7 @@ class Apex(object):
         system["hardware"] = xml["status"]["@hardware"] + " Legacy Version (Status.xml)"
 
         result["system"] = system
+        _LOGGER.debug(f"oldstatus: system:{system}")
 
         inputs = []
         for value in xml["status"]["probes"]["probe"]:
@@ -103,6 +111,7 @@ class Apex(object):
             inputs.append(inputdata)
 
         result["inputs"] = inputs
+        _LOGGER.debug(f"oldstatus: inputs:{inputs}")
 
         outputs = []
         for value in xml["status"]["outlets"]["outlet"]:
@@ -116,6 +125,7 @@ class Apex(object):
             outputs.append(outputdata)
 
         result["outputs"] = outputs
+        _LOGGER.debug(f"oldstatus: outputs:{outputs}")
 
         _LOGGER.debug(f"oldStauts result: {result}")
         return result
