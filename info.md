@@ -1,7 +1,10 @@
 ## **Changelog**
 
-## Version 1.14.1
- - Fix Apex Classic Auth and Control Toggle
+## Version 1.15
+ - Fix Apex Classic to use Basic Auth and JSON Status
+ - Allow Apex Classic to Toggle Switches and Feed Cycle
+ - Add support for Vortech pumps
+ - Get Temperature unit from HA Config if not set from Apex
 ## Version 1.14
 - Fix update error
 - Strip "L" from version information for certain devices
