@@ -64,12 +64,19 @@ class ApexSensor(
                         return value["status"][1]
                     if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
                         if "config" in self.coordinator.data:
-                            for config in self.coordinator.data["config"]["oconf"]:
-                                if config["did"] == self.sensor["did"]:
-                                    if config["ctype"] == "Advanced":
-                                        return self.process_prog(config["prog"])
-                                    else:
-                                        return "Not an Advanced variable!"
+                            config_data = self.coordinator.data["config"]
+                            if "oconf" in config_data:
+                                for config in self.coordinator.data["config"]["oconf"]:
+                                    if config["did"] == self.sensor["did"]:
+                                        if config["ctype"] == "Advanced":
+                                            return self.process_prog(config["prog"])
+                                        else:
+                                            return "Not an Advanced variable!"
+                            else:
+                                if self.sensor["type"] == "variable":
+                                    # _LOGGER.debug(f"get_value[state:variable]: {self.sensor|value}")
+                                    if "intensity" in value:
+                                        return value["intensity"]
                     
         if ftype == "attributes":
             for value in self.coordinator.data["inputs"]:
@@ -83,9 +90,13 @@ class ApexSensor(
                         return value
                     if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
                         if "config" in self.coordinator.data:
-                            for config in self.coordinator.data["config"]["oconf"]:
-                                if config["did"] == self.sensor["did"]: 
-                                    return config
+                            config_data = self.coordinator.data["config"]
+                            if "oconf" in config_data:
+                                for config in self.coordinator.data["config"]["oconf"]:
+                                    if config["did"] == self.sensor["did"]:
+                                        return config
+                            else:
+                                return value
                         else:
                             return value
     

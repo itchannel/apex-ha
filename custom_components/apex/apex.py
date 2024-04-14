@@ -130,6 +130,49 @@ class Apex(object):
         _LOGGER.debug(f"oldstatus result: {result}")
         return result
 
+    def oldstatus_json(self):
+        i = 0
+        while i <= 3:
+            headers = {**defaultHeaders}
+            headers['Authorization'] = self.sid
+
+            r = requests.get(f"http://{self.deviceip}/cgi-bin/status.json?" + str(round(time.time())), headers=headers)
+            # _LOGGER.debug(f"oldstatus_json: Response status code: {r.status_code}")
+            # _LOGGER.debug(f"oldstatus_json: Response body: {r.text}")
+
+            if r.status_code == 200:
+                json_in = r.json()
+                # _LOGGER.debug(f"oldstatus_json: json_in: {json_in}")
+
+                # data comes in istat so move it to root of results
+                result = json_in["istat"];
+
+                # generate system info
+                system = {}
+                system["software"] = result["software"]
+                system["hardware"] = result["hostname"] + " " + result["hardware"] + " " + result["serial"]
+                result["system"] = system
+                # _LOGGER.debug(f"oldstatus_json: system: {system}")
+
+                # Parse outputs to get name for map (for toggle)
+                outputs = result["outputs"]
+                for output in outputs:
+                    did = output["did"]
+                    name = output["name"]
+                    self.did_map[did] = name
+                # _LOGGER.debug(f"oldstatus_json: did_map: {self.did_map}")
+
+                #_LOGGER.debug(f"oldstatus_json result: {result}")
+                return result
+            elif r.status_code == 401:
+                self.auth()
+            else:
+                _LOGGER.debug("oldstatus_json: Unknown error occurred")
+                return {}
+            i += 1
+
+
+
     def status(self):
 
         _LOGGER.debug(f"status grab for {self.version}: sid[{self.sid}]")
@@ -139,7 +182,8 @@ class Apex(object):
             self.auth()
 
         if self.version == "old":
-            result = self.oldstatus()
+            # result = self.oldstatus()
+            result = self.oldstatus_json()
             return result
 
         i = 0
