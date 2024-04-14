@@ -17,7 +17,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor = ApexSensor(entry, value, config_entry.options)
         async_add_entities([sensor], True)
     for value in entry.data["outputs"]:
-        if value["type"] == "dos" or value["type"] == "variable" or value["type"] == "virtual" or value["type"] == "iotaPump|Sicce|Syncra":
+        if value["type"] in ("dos", "variable", "virtual", "vortech", "iotaPump|Sicce|Syncra"):
             sensor = ApexSensor(entry, value, config_entry.options)
             async_add_entities([sensor], True)
             
@@ -62,6 +62,8 @@ class ApexSensor(
                         return value["status"][4]
                     if self.sensor["type"] == "iotaPump|Sicce|Syncra":
                         return value["status"][1]
+                    if self.sensor["type"] == "vortech":
+                        return f"{value["status"][0]} {value["status"][1]} {value["status"][2]}"
                     if self.sensor["type"] == "virtual" or self.sensor["type"] == "variable":
                         if "config" in self.coordinator.data:
                             config_data = self.coordinator.data["config"]
