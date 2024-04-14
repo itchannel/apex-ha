@@ -154,6 +154,9 @@ class Apex(object):
                 result["system"] = system
                 # _LOGGER.debug(f"oldstatus_json: system: {system}")
 
+                # Add Apex type for Feed Calculation
+                result["feed"]["apex_type"] = "old"
+
                 # Parse outputs to get name for map (for toggle)
                 outputs = result["outputs"]
                 for output in outputs:
@@ -294,11 +297,13 @@ class Apex(object):
             FeedSel = "5"
             # ret_state: 1 = ON, 92 = OFF
             ret_state = 92
+            ret_did = 6   # 6 is Off
 
             # If Start Feed then map to FeedSel needed
             if state == "ON" and did in feed_selection_map:
                 FeedSel = feed_selection_map[did]
                 ret_state = 1
+                ret_did = did
 
             headers = {**defaultHeaders}
             headers['Authorization'] = self.sid
@@ -319,6 +324,10 @@ class Apex(object):
 
             status_data = {
                 "active": ret_state,
+                "errorCode": 0,
+                "errorMessage": "",
+                "name": ret_did,
+                "apex_type:": "old"
             }
             return status_data
 
