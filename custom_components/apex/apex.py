@@ -220,8 +220,7 @@ class Apex(object):
             print("Error occurred")
 
     def toggle_output(self, did, state):
-
-        _LOGGER.debug(f"toggle_output [{self.version}]: did[{did}] state[{state}]")
+        # _LOGGER.debug(f"toggle_output [{self.version}]: did[{did}] state[{state}]")
 
         if self.version == "old":
             headers = {**defaultHeaders}
@@ -275,6 +274,54 @@ class Apex(object):
         return data
 
     def toggle_feed_cycle(self, did, state):
+        _LOGGER.debug(f"toggle_feed_cycle [{self.version}]: did[{did}] state[{state}]")
+
+        if self.version == "old":
+
+            # Feed A-D: (0/3)
+            # FeedCycle=Feed&FeedSel=3&noResponse=1
+            # Cancel (5)
+            # FeedCycle=Feed&FeedSel=5&noResponse=1
+
+            feed_selection_map = {
+                "1": "0",
+                "2": "1",
+                "3": "2",
+                "4": "3"
+            }
+
+            # Default to Cancel/OFF
+            FeedSel = "5"
+            # ret_state: 1 = ON, 92 = OFF
+            ret_state = 92
+
+            # If Start Feed then map to FeedSel needed
+            if state == "ON" and did in feed_selection_map:
+                FeedSel = feed_selection_map[did]
+                ret_state = 1
+
+            headers = {**defaultHeaders}
+            headers['Authorization'] = self.sid
+            headers['Content-Type'] = 'application/x-www-form-urlencoded'
+
+            data = f"FeedCycle=Feed&FeedSel={FeedSel}&noResponse=1"
+            # _LOGGER.debug(f"toggle_feed_cycle [old] Out Data: {data}")
+
+            headers['Content-Length'] = f"{len(data)}"
+            # _LOGGER.debug(f"toggle_feed_cycle [old] Headers: {headers}")
+
+            try:
+                url = f"http://{self.deviceip}/cgi-bin/status.cgi"
+                r = requests.post(url, headers=headers, data=data, proxies={"http": None, "https": None})
+                _LOGGER.debug(f"toggle_feed_cycle [old] ({r.status_code}): {r.text}")
+            except Exception as e:
+                _LOGGER.debug(f"toggle_feed_cycle [old] Exception: {e}")
+
+            status_data = {
+                "active": ret_state,
+            }
+            return status_data
+
 
         headers = {**defaultHeaders, "Cookie": "connect.sid=" + self.sid}
         if state == "ON":
