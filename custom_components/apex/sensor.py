@@ -63,7 +63,6 @@ class ApexSensor(
                         apex_type = self.coordinator.data["feed"]["apex_type"]
 
                     # Apex Classic does feed with 6 as OFF and 1-4 as ON
-                    # 5 min as 17992
                     if apex_type == 'old':
 
                         _LOGGER.debug(f"get_value[state:feed]: old_data|{self.coordinator.data["feed"]}")
@@ -73,11 +72,18 @@ class ApexSensor(
                             return 0        # feed is off
                         else:
                             feed_value = self.coordinator.data["feed"]["active"]
-                            hour = feed_value / 60
+                            hour = feed_value
+                            show_hour = 0
+                            if ( feed_value > 3600 ):
+                                show_hour = 1
+                                hour = feed_value / 60
                             total_minutes = hour / 60
                             min = int(total_minutes)
                             sec = (total_minutes - min) * 60
-                            time = f"{min:.0f}:{sec:.0f}"
+                            if show_hour == 1:
+                                time = f"{hour:.0f}{min:.0f}:{sec:.0f}"
+                            else:
+                                time = f"{min:.0f}:{sec:.0f}"
                             return time
 
                 # Handle "feed" if not Apex Classic
