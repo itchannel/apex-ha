@@ -8,8 +8,15 @@ from .const import DOMAIN, SENSORS, MEASUREMENTS, MANUAL_SENSORS
 
 _LOGGER = logging.getLogger(__name__)
 
-
 async def async_setup_entry(hass, config_entry, async_add_entities):
+
+    # _LOGGER.debug("Current configuration: %s", hass.config.as_dict())
+
+    """Get System Temperature Unit"""
+    global _SYSTEM_TEMP_UNIT
+    _SYSTEM_TEMP_UNIT = hass.config.units.temperature_unit
+    _LOGGER.debug("System temperature unit: %s", _SYSTEM_TEMP_UNIT)
+
     """Add the Entities from the config."""
     entry = hass.data[DOMAIN][config_entry.entry_id]
 
@@ -138,7 +145,10 @@ class ApexSensor(
                             return MEASUREMENTS[value["extra"]["range"]]
         if self.sensor["type"] in SENSORS:
             if "measurement" in SENSORS[self.sensor["type"]]:
-                return SENSORS[self.sensor["type"]]["measurement"]
+                if self.sensor["type"] == "Temp":
+                    return _SYSTEM_TEMP_UNIT
+                else:
+                    return SENSORS[self.sensor["type"]]["measurement"]
         return None
 
     @property
