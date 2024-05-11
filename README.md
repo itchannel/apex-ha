@@ -14,9 +14,7 @@ Use HACS and add as a custom repo. Once the integration is installed go to your 
 
 ## Older versions (Apex Jnr, Apex Classic)
 
-Older versions of the Apex controller don't support the rest API that's used by this integration.
-
-I have added in limited support for these older devices using the old status.xml method, this will show the sensors and outputs on your device in HA but currently won't allow toggling switches or writing to the controller from HA
+Older versions of the Apex controller don't support the rest API , however basic support has been added by @dkramarc which allows controlling switches and reading values using basic auth and the legacy API.
 
 ## Options
 
