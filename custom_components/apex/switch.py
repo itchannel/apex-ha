@@ -54,6 +54,7 @@ class Switch(ApexEntity, SwitchEntity):
                     self.switch["did"],
                     "ON"
                 )
+                _LOGGER.debug(f"async_turn_on -> Update: {update}")
                 if update["status"][0] == "ON" or update["status"][0] == "AON":
                     self._state = True
                     self.switch["status"] = update["status"]
@@ -80,6 +81,7 @@ class Switch(ApexEntity, SwitchEntity):
                     self.switch["did"],
                     "OFF"
                 )
+                _LOGGER.debug(f"async_turn_off -> Update: {update}")
                 if update["status"][0] == "OFF" or update["status"][0] == "AOF":
                     self._state = False
                     self.switch["status"] = update["status"]
@@ -103,10 +105,16 @@ class Switch(ApexEntity, SwitchEntity):
             self._state = None
             return False
         if self.switch["type"] == "Feed":
-            if self.coordinator.data["feed"]["name"] == int(self.switch["did"]):
-                return True
+            if "feed" in self.coordinator.data and "name" in self.coordinator.data["feed"]:
+                try:
+                    feed_id = int(self.switch["did"])
+                    return self.coordinator.data["feed"]["name"] == feed_id
+                except ValueError:
+                    _LOGGER.error(f"Invalid device ID format: {self.switch['did']}")
+                    return False
             else:
-                return False                 
+                # _LOGGER.error("Feed data is missing from the coordinator data.")
+                return False
         else:
             for value in self.coordinator.data["outputs"]:
                 if value["did"] == self.switch["did"]:

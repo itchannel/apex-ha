@@ -73,8 +73,11 @@ class ApexUpdate(
     
     @property
     def latest_version(self):
-        return self.coordinator.data["config"]["nconf"]["latestFirmware"]
-    
+        latest_firmware = (self.coordinator.data.get("config", {})
+                           .get("nconf", {})
+                           .get("latestFirmware", "Not Available"))
+        return latest_firmware
+
     @property
     def name(self):
         return "apex_" + self.sensor

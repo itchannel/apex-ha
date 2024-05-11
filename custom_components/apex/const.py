@@ -11,7 +11,10 @@ SWITCHES = {
     "dos": {"icon": "mdi:test-tube"},
     "virtual": {"icon": "mdi:monitor-account"},
     "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump"},
-    "Feed" :  {"icon": "mdi:shaker"}
+    "Feed" :  {"icon": "mdi:shaker"},
+    "gph" : {"icon": "mdi:waves-arrow-right"},
+    "vortech" : {"icon": "mdi:pump"},
+    "UNK" : {"icon": "mdi:help"}
     }
 
 FEED_CYCLES = [
@@ -39,7 +42,10 @@ SENSORS = {
     "iotaPump|Sicce|Syncra": {"icon" : "mdi:pump", "measurement": "%"},
     "variable" : {"icon" : "mdi:cog-outline"},
     "virtual" : {"icon" : "mdi:cog-outline"},
-    "feed" : {"icon": "mdi:timer", "measurement": "mins"}
+    "feed" : {"icon": "mdi:timer", "measurement": "mins"},
+    "gph" : {"icon": "mdi:waves-arrow-right", "measurement": "gph"},
+    "vortech" : {"icon": "mdi:pump"},
+    "UNK" : {"icon": "mdi:help"}
 }
 
 MANUAL_SENSORS = [
