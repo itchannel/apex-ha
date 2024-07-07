@@ -201,8 +201,10 @@ class Apex(object):
         if 1 <= pump_number <= 2:
             pump_index = pump_number - 1
 
-            # find the module conf for the requested device and double check that it's a DOS pump
+            # find the module conf for the requested device and double check that it's a DOS or DQD pump
             module = self.get_module(module_number, HWTYPE_DOS)
+            if module is None:
+                module = self.get_module(module_number, HWTYPE_DQD)
             if module is not None:
                 module[EXTRA][VOLUME_LEFT][pump_index] = module[EXTRA][VOLUME][pump_index]
                 return self.try3(f"{CONFIG}/{MCONF}/{module_number}", module)

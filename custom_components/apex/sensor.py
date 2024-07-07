@@ -79,7 +79,7 @@ class ApexSensor(
     def process_prog(prog):
         if "Set PF" in prog:
             return prog
-        test = re.findall("Set\s[^\d]*(\d+)", prog)
+        test = re.findall(r"Set\s\D*(\d+)", prog)
         if test:
             # logger.debug(test[0])
             return int(test[0])
