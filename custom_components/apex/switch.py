@@ -31,6 +31,7 @@ class Switch(ApexEntity, SwitchEntity):
         self._state = None
         # Required for HA 2022.7
         self.coordinator_context = object()
+        logger.debug(switch)
 
     async def async_turn_on(self, **kwargs):
         update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output_state, self.switch[DID], AUTO)
