@@ -19,6 +19,7 @@ ATTRIBUTES = "attributes"
 
 # types
 DOS = "dos"
+DQD = "dqd"
 IOTA = "iotaPump|Sicce|Syncra"
 VARIABLE = "variable"
 VIRTUAL = "virtual"
@@ -37,6 +38,7 @@ SWITCHES = {
     "afs": {"icon": "mdi:shaker"},
     "24v": {"icon": "mdi:home-lightning-bolt-outline"},
     DOS: {"icon": "mdi:test-tube"},
+    DQD: {"icon": "mdi:test-tube"},
     VIRTUAL: {"icon": "mdi:monitor-account"},
     IOTA: {"icon": "mdi:pump"}
 }
@@ -55,12 +57,14 @@ SENSORS = {
     "ca": {"icon": "mdi:test-tube", "measurement": "ppm"},
     "mg": {"icon": "mdi:test-tube", "measurement": "ppm"},
     DOS: {"icon": "mdi:pump", "measurement": "mL"},
+    DQD: {"icon": "mdi:pump", "measurement": "mL"},
     IOTA: {"icon": "mdi:pump", "measurement": "%"},
     VARIABLE: {"icon": "mdi:cog-outline"},
     VIRTUAL: {"icon": "mdi:cog-outline"},
 }
 
 MEASUREMENTS = {
+    # is this due to a typo in the Apex system?
     "Celcius": "°C",
     "Faren": "°F"
 }
