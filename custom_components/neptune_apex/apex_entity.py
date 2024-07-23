@@ -38,6 +38,5 @@ class ApexEntity(CoordinatorEntity):
             NAME: self.coordinator.hostname,
             "hw_version": self.coordinator.data[STATUS][SYSTEM]["hardware"],
             "sw_version": self.coordinator.data[STATUS][SYSTEM]["software"],
-            "serial": self.coordinator.data[STATUS][SYSTEM]["serial"],
             "manufacturer": MANUFACTURER
         }
