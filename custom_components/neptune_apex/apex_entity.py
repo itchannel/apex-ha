@@ -12,7 +12,8 @@ class ApexEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         # we do not pass a name up the tree
-        self._device_id = self._attr_unique_id = f"{coordinator.hostname}_{entity[NAME]}"
+        self._device_id = self._attr_unique_id = f"{coordinator.hostname}_{entity[NAME]}".lower()
+        self._attr_name = f"{coordinator.hostname.capitalize()} {entity[NAME]}"
         logger.debug(f"{entity_type}.{self._device_id} = (NAME: {entity[NAME]}, DID: {entity[DID]}, TYPE: {entity[TYPE]})")
 
         # just a HASS requirement
@@ -28,16 +29,11 @@ class ApexEntity(CoordinatorEntity):
         return self._device_id
 
     @property
-    def unique_id(self):
-        return self._device_id
-
-    @property
     def device_id(self):
         return self._device_id
 
     @property
     def device_info(self):
-        """Return device information about this device."""
         if self._device_id is None:
             return None
 
