@@ -57,6 +57,7 @@ class Apex(object):
         tries = 0
         result = None
         url = f"http://{self.deviceip}/{REST}/{url_path}"
+        logging.debug(f"fetching url ({url})")
         while (tries < 3) and (result is None):
             tries += 1
             if self.auth():
