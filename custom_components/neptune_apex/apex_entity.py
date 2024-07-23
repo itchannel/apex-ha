@@ -35,8 +35,9 @@ class ApexEntity(CoordinatorEntity):
 
         return {
             "identifiers": {(DOMAIN, self.coordinator.deviceip)},
-            NAME: f"Apex Controller ({self.coordinator.hostname})",
+            NAME: self.coordinator.hostname,
             "hw_version": self.coordinator.data[STATUS][SYSTEM]["hardware"],
             "sw_version": self.coordinator.data[STATUS][SYSTEM]["software"],
+            "serial": self.coordinator.data[STATUS][SYSTEM]["serial"],
             "manufacturer": MANUFACTURER
         }
