@@ -1,4 +1,4 @@
-DOMAIN = "apex"
+DOMAIN = "neptune_apex"
 DEVICEIP = "deviceip"
 MANUFACTURER = "Neptune Apex"
 

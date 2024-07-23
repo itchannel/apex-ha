@@ -1,8 +1,7 @@
 import logging
 
 from homeassistant.components.switch import SwitchEntity
-
-from . import ApexEntity
+from .apex_entity import ApexEntity
 from .const import DOMAIN, NAME, SWITCHES, STATUS, DID, TYPE, OUTPUTS
 
 logger = logging.getLogger(__name__)
@@ -16,22 +15,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     entry = hass.data[DOMAIN][config_entry.entry_id]
 
     for value in entry.data[STATUS][OUTPUTS]:
-        sw = Switch(entry, value, config_entry.options)
+        sw = Switch(entry, value)
         async_add_entities([sw], False)
 
 
 class Switch(ApexEntity, SwitchEntity):
-    """Define the Switch for turning ignition off/on"""
-
-    def __init__(self, coordinator, switch, options):
-
-        self._device_id = f"apex_{switch[NAME]}"
+    def __init__(self, coordinator, switch):
+        super().__init__("switch", switch, coordinator)
         self.switch = switch
-        self.coordinator = coordinator
         self._state = None
-        # Required for HA 2022.7
-        self.coordinator_context = object()
-        logger.debug(f"Switch (NAME: {switch[NAME]}, DID: {switch[DID]}, TYPE: {switch[TYPE]})")
 
     async def async_turn_on(self, **kwargs):
         update = await self.coordinator.hass.async_add_executor_job(self.coordinator.apex.set_output_state, self.switch[DID], AUTO)

@@ -2,8 +2,7 @@ import logging
 import re
 
 from homeassistant.helpers.entity import Entity
-
-from . import ApexEntity
+from .apex_entity import ApexEntity
 from .const import DOMAIN, NAME, SENSORS, MEASUREMENTS, STATUS, DID, TYPE, CONFIG, INPUTS, OUTPUTS, OCONF, ICONF, STATE, ATTRIBUTES, DOS, DQD, IOTA, VARIABLE, VIRTUAL, CTYPE, ADVANCED, PROG
 
 logger = logging.getLogger(__name__)
@@ -17,24 +16,17 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         sensor = ApexSensor(entry, value, config_entry.options)
         async_add_entities([sensor], True)
     for value in entry.data[STATUS][OUTPUTS]:
-        if (value[TYPE] == DOS) or (value[TYPE] == DQD) or (value[TYPE] == VARIABLE) or (value[TYPE] == VIRTUAL) or (value[TYPE] == IOTA):
+        if value[TYPE] in [DOS, DQD, VARIABLE, VIRTUAL, IOTA]:
             sensor = ApexSensor(entry, value, config_entry.options)
             async_add_entities([sensor], True)
 
 
-class ApexSensor(
-    ApexEntity,
-    Entity,
-):
+class ApexSensor(ApexEntity, Entity):
     def __init__(self, coordinator, sensor, options):
-
+        super().__init__("sensor", sensor, coordinator)
         self.sensor = sensor
         self.options = options
         self._attr = {}
-        self.coordinator = coordinator
-        self._device_id = f"apex_{sensor[NAME]}"
-        # Required for HA 2022.7
-        self.coordinator_context = object()
 
     # Need to tidy this section up and avoid using so many for loops
     def get_value(self, ftype):
@@ -120,5 +112,5 @@ class ApexSensor(
         if self.sensor[TYPE] in SENSORS:
             return SENSORS[self.sensor[TYPE]]["icon"]
         else:
-            logger.debug("Missing icon: " + self.sensor[TYPE])
+            logger.debug("missing icon: " + self.sensor[TYPE])
             return None
