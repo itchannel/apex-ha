@@ -46,7 +46,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     # try to get the configuration
     status = await hass.async_add_executor_job(apex.status)
-    name = status[SYSTEM][HOSTNAME] if status is not None else f"Apex ({data[DEVICEIP]})"
+    name = str(status[SYSTEM][HOSTNAME]).capitalize() if status is not None else f"Apex ({data[DEVICEIP]})"
 
     # return the title for the integration
     return {"title": name}
