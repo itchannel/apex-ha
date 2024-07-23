@@ -5,6 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from .const import SYSTEM, HOSTNAME
 
 from .const import (  # pylint:disable=unused-import
     DOMAIN,
@@ -36,14 +37,19 @@ async def validate_input(hass: core.HomeAssistant, data):
     try:
         result = await hass.async_add_executor_job(apex.auth)
     except Exception as ex:
+        logger.error(f"exception when authenticating with {data[DEVICEIP]}")
         raise InvalidAuth from ex
 
     if not result:
-        logger.error("Failed to authenticate with Apex Controller")
+        logger.error(f"failed to connect to {data[DEVICEIP]}")
         raise CannotConnect
 
+    # try to get the configuration
+    status = apex.status()
+    name = status[SYSTEM][HOSTNAME] if status is not None else data[DEVICEIP]
+
     # Return info that you want to store in the config entry.
-    return {"title": f"Apex Controller ({data[DEVICEIP]})"}
+    return {"title": f"Apex Controller ({name})"}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
