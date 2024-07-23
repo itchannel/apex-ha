@@ -12,7 +12,7 @@ class ApexEntity(CoordinatorEntity):
         super().__init__(coordinator)
 
         # we do not pass a name up the tree
-        self._device_id = self._attr_unique_id = f"{coordinator.name}_{entity[NAME]}"
+        self._device_id = self._attr_unique_id = f"{coordinator.hostname}_{entity[NAME]}"
         logger.debug(f"{entity_type}.{self._device_id} = (NAME: {entity[NAME]}, DID: {entity[DID]}, TYPE: {entity[TYPE]})")
 
         # just a HASS requirement
@@ -43,7 +43,7 @@ class ApexEntity(CoordinatorEntity):
 
         return {
             "identifiers": {(DOMAIN, self.coordinator.deviceip)},
-            NAME: f"Apex Controller ({self.coordinator.name})",
+            NAME: f"Apex Controller ({self.coordinator.hostname})",
             "hw_version": self.coordinator.data[STATUS][SYSTEM]["hardware"],
             "sw_version": self.coordinator.data[STATUS][SYSTEM]["software"],
             "manufacturer": MANUFACTURER

@@ -48,5 +48,5 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"error communicating with Apex for {self.deviceip}") from ex
 
     @property
-    def name(self) -> str:
+    def hostname(self) -> str:
         return self.data[STATUS][SYSTEM][HOSTNAME]
