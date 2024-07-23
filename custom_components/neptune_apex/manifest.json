@@ -1,6 +1,6 @@
 {
-    "domain": "apex",
-    "name": "Apex",
+    "domain": "neptune_apex",
+    "name": "Neptune Apex",
     "config_flow": true,
     "documentation": "https://github.com/brettonw/apex-ha",
     "issue_tracker": "https://github.com/brettonw/apex-ha/issues",
