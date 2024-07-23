@@ -2,8 +2,9 @@ import logging
 import re
 
 from homeassistant.helpers.entity import Entity
+
 from .apex_entity import ApexEntity
-from .const import DOMAIN, NAME, SENSORS, MEASUREMENTS, STATUS, DID, TYPE, CONFIG, INPUTS, OUTPUTS, OCONF, ICONF, STATE, ATTRIBUTES, DOS, DQD, IOTA, VARIABLE, VIRTUAL, CTYPE, ADVANCED, PROG
+from .const import DOMAIN, SENSORS, MEASUREMENTS, STATUS, DID, TYPE, CONFIG, INPUTS, OUTPUTS, OCONF, ICONF, STATE, ATTRIBUTES, DOS, DQD, IOTA, VARIABLE, VIRTUAL, CTYPE, ADVANCED, PROG
 
 logger = logging.getLogger(__name__)
 
@@ -36,11 +37,11 @@ class ApexSensor(ApexEntity, Entity):
                     return value["value"]
             for value in self.coordinator.data[STATUS][OUTPUTS]:
                 if value[DID] == self.sensor[DID]:
-                    if (self.sensor[TYPE] == DOS) or (self.sensor[TYPE] == DQD):
+                    if self.sensor[TYPE] in [DOS, DQD]:
                         return value[STATUS][4]
                     if self.sensor[TYPE] == IOTA:
                         return value[STATUS][1]
-                    if (self.sensor[TYPE] == VIRTUAL) or (self.sensor[TYPE] == VARIABLE):
+                    if self.sensor[TYPE] in [VIRTUAL, VARIABLE]:
                         if self.coordinator.data[CONFIG] is not None:
                             for config in self.coordinator.data[CONFIG][OCONF]:
                                 if config[DID] == self.sensor[DID]:
@@ -55,11 +56,11 @@ class ApexSensor(ApexEntity, Entity):
                     return value
             for value in self.coordinator.data[STATUS][OUTPUTS]:
                 if value[DID] == self.sensor[DID]:
-                    if (self.sensor[TYPE] == DOS) or (self.sensor[TYPE] == DQD):
+                    if self.sensor[TYPE] in [DOS, DQD]:
                         return value
                     if self.sensor[TYPE] == IOTA:
                         return value
-                    if self.sensor[TYPE] == VIRTUAL or self.sensor[TYPE] == VARIABLE:
+                    if self.sensor[TYPE] in [VIRTUAL, VARIABLE]:
                         if self.coordinator.data[CONFIG] is not None:
                             for config in self.coordinator.data[CONFIG][OCONF]:
                                 if config[DID] == self.sensor[DID]:
@@ -79,16 +80,8 @@ class ApexSensor(ApexEntity, Entity):
             return prog     
     
     @property
-    def name(self):
-        return "apex_" + self.sensor[NAME]
-
-    @property
     def state(self):
         return self.get_value(STATE)
-
-    @property
-    def device_id(self):
-        return self.device_id
 
     @property
     def extra_state_attributes(self):

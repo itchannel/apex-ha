@@ -2,7 +2,7 @@ import logging
 
 from homeassistant.components.switch import SwitchEntity
 from .apex_entity import ApexEntity
-from .const import DOMAIN, NAME, SWITCHES, STATUS, DID, TYPE, OUTPUTS
+from .const import DOMAIN, SWITCHES, STATUS, DID, TYPE, OUTPUTS
 
 logger = logging.getLogger(__name__)
 
@@ -40,14 +40,6 @@ class Switch(ApexEntity, SwitchEntity):
             self.switch[STATUS] = update[STATUS]
             logger.debug(f"Writing state {OFF}")
             self.async_write_ha_state()
-
-    @property
-    def name(self):
-        return "apex_" + self.switch[NAME]
-
-    @property
-    def device_id(self):
-        return self.device_id
 
     @property
     def is_on(self):

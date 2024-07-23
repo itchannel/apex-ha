@@ -1,4 +1,4 @@
-DOMAIN = "apex"
+DOMAIN = "neptune_apex"
 DEVICEIP = "deviceip"
 MANUFACTURER = "Neptune Apex"
 
@@ -16,6 +16,8 @@ ICONF = "iconf"
 MCONF = "mconf"
 STATE = "state"
 ATTRIBUTES = "attributes"
+SYSTEM = "system"
+HOSTNAME = "hostname"
 
 # types
 DOS = "dos"

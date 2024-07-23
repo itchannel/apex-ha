@@ -7,7 +7,7 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DOMAIN, STATUS, CONFIG
+from .const import DOMAIN, STATUS, CONFIG, SYSTEM, HOSTNAME
 from .apex import Apex
 
 logger = logging.getLogger(__name__)
@@ -46,3 +46,7 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
             logger.warning(str(ex))
             logger.warning("error communicating with Apex for %s", self.deviceip)
             raise UpdateFailed(f"error communicating with Apex for {self.deviceip}") from ex
+
+    @property
+    def name(self) -> str:
+        return self.data[STATUS][SYSTEM][HOSTNAME]
