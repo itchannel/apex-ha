@@ -42,7 +42,7 @@ class Apex(object):
             data = {"login": self.username, "password": self.password, "remember_me": False}
             url = f"http://{self.deviceip}/{REST}/login"
             logging.debug(f"fetching url for auth ({url})")
-            r = requests.post(f"http://{url}", headers=headers, json=data)
+            r = requests.post(url, headers=headers, json=data)
             # logger.debug(r.request.body)
             # logger.debug(r.status_code)
             # logger.debug(r.text)
