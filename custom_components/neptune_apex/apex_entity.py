@@ -25,10 +25,6 @@ class ApexEntity(CoordinatorEntity):
         self._handle_coordinator_update()
 
     @property
-    def name(self):
-        return self._device_id
-
-    @property
     def device_id(self):
         return self._device_id
 
