@@ -36,9 +36,9 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     try:
         result = await hass.async_add_executor_job(apex.auth)
-    except Exception as ex:
-        logger.error(f"exception when authenticating with {data[DEVICEIP]}")
-        raise InvalidAuth from ex
+    except Exception as exc:
+        logger.error(f"exception when authenticating with {data[DEVICEIP]}: {exc}")
+        raise InvalidAuth from exc
 
     if not result:
         logger.error(f"failed to connect to {data[DEVICEIP]}")
@@ -46,10 +46,10 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     # try to get the configuration
     status = await hass.async_add_executor_job(apex.status)
-    name = status[SYSTEM][HOSTNAME] if status is not None else data[DEVICEIP]
+    name = status[SYSTEM][HOSTNAME] if status is not None else f"Apex ({data[DEVICEIP]})"
 
-    # Return info that you want to store in the config entry.
-    return {"title": f"Apex Controller ({name})"}
+    # return the title for the integration
+    return {"title": name}
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -59,21 +59,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
 
     async def async_step_user(self, user_input=None):
-        """Handle the initial step."""
         errors = {}
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except CannotConnect:
-                print("EXCEPT")
+            except CannotConnect as exc:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except InvalidAuth as exc:
                 errors["base"] = "invalid_auth"
-            except InvalidVin:
-                errors["base"] = "invalid_vin"
-            except Exception:  # pylint: disable=broad-except
-                logger.exception("Unexpected exception")
+            except Exception as exc:  # pylint: disable=broad-except
+                logger.exception(f"Unexpected exception {exc}")
                 errors["base"] = "unknown"
 
         return self.async_show_form(
@@ -83,13 +79,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
-        """Get the options flow for this handler."""
         return OptionsFlow(config_entry)
 
 
 class OptionsFlow(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry):
-        """Initialize options flow."""
         self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
@@ -113,7 +107,3 @@ class CannotConnect(exceptions.HomeAssistantError):
 
 class InvalidAuth(exceptions.HomeAssistantError):
     """Error to indicate there is invalid auth."""
-
-
-class InvalidVin(exceptions.HomeAssistantError):
-    """Error to indicate the wrong vin"""
