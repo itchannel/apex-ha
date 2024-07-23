@@ -40,7 +40,9 @@ class Apex(object):
             tries += 1
             headers = {**DEFAULT_HEADERS}
             data = {"login": self.username, "password": self.password, "remember_me": False}
-            r = requests.post(f"http://{self.deviceip}/{REST}/login", headers=headers, json=data)
+            url = f"http://{self.deviceip}/{REST}/login"
+            logging.debug(f"fetching url for auth ({url})")
+            r = requests.post(f"http://{url}", headers=headers, json=data)
             # logger.debug(r.request.body)
             # logger.debug(r.status_code)
             # logger.debug(r.text)
