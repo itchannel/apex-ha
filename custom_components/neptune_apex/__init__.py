@@ -47,8 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    for component in PLATFORMS:
-        await hass.config_entries.async_forward_entry_setups(entry, component)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def async_set_options_service(service_call):
         await hass.async_add_executor_job(set_output, hass, service_call, coordinator)
