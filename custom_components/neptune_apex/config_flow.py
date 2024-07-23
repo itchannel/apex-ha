@@ -45,7 +45,7 @@ async def validate_input(hass: core.HomeAssistant, data):
         raise CannotConnect
 
     # try to get the configuration
-    status = apex.status()
+    status = await hass.async_add_executor_job(apex.status)
     name = status[SYSTEM][HOSTNAME] if status is not None else data[DEVICEIP]
 
     # Return info that you want to store in the config entry.
