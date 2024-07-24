@@ -1,4 +1,3 @@
-"""The Apex Controller integration."""
 import asyncio
 import logging
 import voluptuous as vol
@@ -20,13 +19,11 @@ logger = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the Apex component."""
     hass.data.setdefault(DOMAIN, {})
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Set up Apex Device from a config entry."""
     user = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
     deviceip = entry.data[DEVICEIP]
@@ -38,17 +35,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     for ar in entry.data:
         logger.debug(ar)
 
+    # set up the coordinator, do an initial refresh, make sure it succeeded
     coordinator = ApexDataUpdateCoordinator(hass, user, password, deviceip, update_interval)
-
-    await coordinator.async_refresh()  # Get initial data
-
+    await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise ConfigEntryNotReady
-
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # set up the sensors and switches
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # define the service call functions
     async def async_set_options_service(service_call):
         await hass.async_add_executor_job(set_output, hass, service_call, coordinator)
 
@@ -64,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     async def async_refill_reservoir(service_call):
         await hass.async_add_executor_job(refill_reservoir, hass, service_call, coordinator)
 
+    # register the service call functions
     hass.services.async_register(DOMAIN, "set_output", async_set_options_service)
     hass.services.async_register(DOMAIN, "set_variable", async_set_variable_service)
     hass.services.async_register(DOMAIN, "set_dosing_rate", async_set_dosing_rate_service)
@@ -104,7 +102,6 @@ def refill_reservoir(hass, service, coordinator):
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
-    """Unload a config entry."""
     unload_ok = all(
         await asyncio.gather(
             *[hass.config_entries.async_forward_entry_unload(entry, component) for component in PLATFORMS]
@@ -112,5 +109,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
     )
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok

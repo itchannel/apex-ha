@@ -2,8 +2,8 @@
     "domain": "neptune_apex",
     "name": "Neptune Apex",
     "config_flow": true,
-    "documentation": "https://github.com/brettonw/apex-ha",
-    "issue_tracker": "https://github.com/brettonw/apex-ha/issues",
+    "documentation": "https://github.com/brettonw/neptune-apex",
+    "issue_tracker": "https://github.com/brettonw/neptune-apex/issues",
     "version": "2.0.0",
     "requirements": [],
     "ssdp": [],
@@ -11,5 +11,5 @@
     "homekit": {},
     "dependencies": [],
     "iot_class": "local_polling",
-    "codeowners": ["@itchannel", "@brettonw"]
+    "codeowners": ["@brettonw"]
   }
