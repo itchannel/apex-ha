@@ -31,18 +31,18 @@ set_variable:
       example: "Set 75"
       selector:
         text:
-set_dos_rate:
-  description: "Set the dosing rate for a DOS or DQD pump"
+set_dosing_rate:
+  description: "Set the dosing rate for a DOS or DQD dosing pump"
   fields:
     did:
       name: "DID"
-      description: "DID of the DOS or DQD pump"
+      description: "DID of the dosing pump"
       example: "4_1"
       selector:
         text:
     profile_id:
       name: "Profile ID"
-      description: "Profile ID to assign to the DOS pump, the integration will rename it appropriately."
+      description: "Profile ID to assign to the dosing pump, the integration will rename it appropriately."
       example: 11
       selector:
         text:
@@ -52,19 +52,13 @@ set_dos_rate:
       example: 1.2
       selector:
         text:
-refill_dos_reservoir:
-  description: "Set the DOS or DQD pump reservoir remaining value to reflect a fill operation"
+refill_reservoir:
+  description: "Refill the reservoir for a DOS or DQD dosing pump"
   fields:
-    module_number:
-      name: "Module Number"
-      description: "Number of the module for the DOS or DQD pump (range 1..n)"
-      example: 4
-      selector:
-        text:
-    pump_number:
-      name: "Pump Number"
-      description: "DOS and DQD modules have 2 pumps (1 and 2), each with an independent reservoir."
-      example: 1
+    did:
+      name: "DID"
+      description: "DID of the DOS or DQD pump"
+      example: "4_1"
       selector:
         text:
 set_temperature:
