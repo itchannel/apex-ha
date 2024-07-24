@@ -72,7 +72,7 @@ set_temperature:
         text:
     temperature:
       name: "Temperature"
-      description: "The desired temperature (degrees in APex configured units)"
+      description: "The desired temperature (degrees in Apex configured units)"
       example: 80
       selector:
         text:
