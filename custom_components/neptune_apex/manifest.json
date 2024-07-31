@@ -11,5 +11,5 @@
     "requirements": [],
     "ssdp": [],
     "version": "2.0.0",
-    "zeroconf": ["apex._http._tcp.local."]
+    "zeroconf": [{"type":"_http._tcp.local.","name":"apex*"}]
   }
