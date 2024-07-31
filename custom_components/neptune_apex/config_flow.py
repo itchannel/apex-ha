@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         logger.debug(f"zeroconf discovered (device: {discovery_info.properties["sn"]}, hostname: {discovery_info.properties["hn"]}, ip_address: {discovery_info.ip_address})")
         # note, we capture the hostname here and pass that too
-        return await self.async_step_user(user_input={DEVICEIP: discovery_info.ip_address, HOSTNAME: discovery_info.properties["hn"]})
+        return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
 
     @staticmethod
     @callback
