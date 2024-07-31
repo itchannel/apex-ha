@@ -1,15 +1,10 @@
 import logging
-from asyncio import Task
-from typing import Any, Dict, Coroutine, Mapping, Container
 
 import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResultType
-from voluptuous import Schema
 
 from .const import SYSTEM, HOSTNAME
 
@@ -37,7 +32,7 @@ async def validate_input(hass: core.HomeAssistant, data):
 
     # try to get the configuration
     status = await hass.async_add_executor_job(apex.status)
-    name = str(status[SYSTEM][HOSTNAME]).capitalize() if status is not None else f"Apex ({data[DEVICEIP]})"
+    name = str(status[SYSTEM][HOSTNAME]).capitalize() if status is not None else f"Apex ({data.get(HOSTNAME, data[DEVICEIP])})"
 
     # return the title for the integration
     return {"title": name}
@@ -49,7 +44,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         errors = {}
-        if user_input is not None:
+        if (user_input is not None) and (CONF_USERNAME in user_input) and (CONF_PASSWORD in user_input) and (DEVICEIP in user_input):
             try:
                 info = await validate_input(self.hass, user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
@@ -62,8 +57,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         data_schema = vol.Schema({
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
+            vol.Required(CONF_USERNAME, default=None if user_input is None else user_input.get(CONF_USERNAME, None)): str,
+            vol.Required(CONF_PASSWORD, default=None if user_input is None else user_input.get(CONF_PASSWORD, None)): str,
             vol.Required(DEVICEIP, default=None if user_input is None else user_input.get(DEVICEIP, None)): str,
         })
 
@@ -76,7 +71,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.properties["sn"])
         self._abort_if_unique_id_configured()
         logger.debug(f"zeroconf discovered (device: {discovery_info.properties["sn"]}, hostname: {discovery_info.properties["hn"]}, ip_address: {discovery_info.ip_address})")
-        return await self.async_step_user(user_input={DEVICEIP: discovery_info.ip_address})
+        # note, we capture the hostname here and pass that too
+        return await self.async_step_user(user_input={DEVICEIP: discovery_info.ip_address, HOSTNAME: discovery_info.properties["hn"]})
 
     @staticmethod
     @callback
