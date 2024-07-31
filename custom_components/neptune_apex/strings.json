@@ -20,13 +20,13 @@
   },
   "options": {
     "step": {
-        "init": {
-            "data": {
-                "update_interval": "Interval to poll Controller (Seconds)"
-            },
-            "description": "Configure Controller Options"
-        }
+      "init": {
+        "data": {
+          "update_interval": "Interval to poll Controller (Seconds)"
+        },
+        "description": "Configure Controller Options"
+      }
     }
-}
+  }
 }
   

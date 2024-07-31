@@ -1,13 +1,14 @@
-"""Config flow for Apex integration."""
 import logging
 
 import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from .const import SYSTEM, HOSTNAME
 
-from .const import (  # pylint:disable=unused-import
+from .const import (
     DOMAIN,
     DEVICEIP,
     UPDATE_INTERVAL,
@@ -17,23 +18,15 @@ from .apex import Apex
 
 logger = logging.getLogger(__name__)
 
-DATA_SCHEMA = vol.Schema(
-    {
+DATA_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
         vol.Required(DEVICEIP): str,
-    }
-)
+    })
 
 
 async def validate_input(hass: core.HomeAssistant, data):
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-
     apex = Apex(data[CONF_USERNAME], data[CONF_PASSWORD], data[DEVICEIP])
-
     try:
         result = await hass.async_add_executor_job(apex.auth)
     except Exception as exc:
@@ -53,10 +46,8 @@ async def validate_input(hass: core.HomeAssistant, data):
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Apex Controller."""
-
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def async_step_user(self, user_input=None):
         errors = {}
@@ -64,9 +55,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             try:
                 info = await validate_input(self.hass, user_input)
                 return self.async_create_entry(title=info["title"], data=user_input)
-            except CannotConnect as exc:
+            except CannotConnect:
                 errors["base"] = "cannot_connect"
-            except InvalidAuth as exc:
+            except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception as exc:  # pylint: disable=broad-except
                 logger.exception(f"Unexpected exception {exc}")
@@ -75,6 +66,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
+
+    async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
+        data_schema = vol.Schema({
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(DEVICEIP, default=discovery_info.ip_address): str,
+        })
+        return self.async_show_form(step_id="user", data_schema=data_schema, errors={})
 
     @staticmethod
     @callback

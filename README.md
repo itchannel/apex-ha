@@ -1,4 +1,4 @@
-# Neptune Apex
+<img src="img/logo@2x.png">
 
 This is a Home Assistant integration for the [Neptune Apex](https://www.neptunesystems.com/)  line of aquarium controllers. 
 
@@ -10,9 +10,9 @@ Use HACS and add as a custom repo. Once the integration is installed go to your 
 - Password (Apex Controller Password)
 - Apex Controller IP Address
 
-## Older versions (Apex Jnr, Apex Classic)
+## Supported Apex Versions
 
-Use the original [apex_ha](https://github.com/itchannel/apex-ha) integration that inspired this one.
+This integration is focused on the Apex (2016 and on). For devices like the Apex Jr. and Apex Classic, we recoommend the original [itchannel/apex_ha](https://github.com/itchannel/apex-ha) integration this one derives from.
 
 ## Options
 

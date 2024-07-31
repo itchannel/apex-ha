@@ -1,15 +1,15 @@
 {
     "domain": "neptune_apex",
     "name": "Neptune Apex",
+    "codeowners": ["@brettonw"],
     "config_flow": true,
+    "dependencies" : [],
     "documentation": "https://github.com/brettonw/neptune-apex",
+    "homekit": {},
+    "iot_class": "local_polling",
     "issue_tracker": "https://github.com/brettonw/neptune-apex/issues",
-    "version": "2.0.0",
     "requirements": [],
     "ssdp": [],
-    "zeroconf": [],
-    "homekit": {},
-    "dependencies": [],
-    "iot_class": "local_polling",
-    "codeowners": ["@brettonw"]
+    "version": "2.0.0",
+    "zeroconf": ["apex._http._tcp.local"]
   }

@@ -14,10 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 class ApexDataUpdateCoordinator(DataUpdateCoordinator):
-    """DataUpdateCoordinator to handle fetching new data about the Apex Controller."""
-
     def __init__(self, hass, user: str, password: str, deviceip: str, update_interval: float):
-        """Initialize the coordinator and set up the Controller object."""
         self._hass = hass
         self.deviceip: str = deviceip
         self.apex: Apex = Apex(user, password, deviceip)
@@ -31,7 +28,6 @@ class ApexDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
     async def _async_update_data(self):
-        """Fetch data from Apex Controller."""
         try:
             async with async_timeout.timeout(30):
                 data = {
