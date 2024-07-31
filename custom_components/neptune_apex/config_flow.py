@@ -56,15 +56,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 logger.exception(f"Unexpected exception {exc}")
                 errors["base"] = "unknown"
 
+        logger.debug(f"user_input -> {user_input}")
         data_schema = vol.Schema({
             vol.Required(CONF_USERNAME, default=None if user_input is None else user_input.get(CONF_USERNAME, None)): str,
             vol.Required(CONF_PASSWORD, default=None if user_input is None else user_input.get(CONF_PASSWORD, None)): str,
             vol.Required(DEVICEIP, default=None if user_input is None else user_input.get(DEVICEIP, None)): str,
         })
 
-        return self.async_show_form(
-            step_id="user", data_schema=data_schema, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo):
         # use the serial number as a unique identifier
