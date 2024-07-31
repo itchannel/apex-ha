@@ -63,7 +63,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(DEVICEIP, default=None if user_input is None else user_input.get(DEVICEIP, None)): str,
         })
 
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+        return await self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo):
         # use the serial number as a unique identifier
