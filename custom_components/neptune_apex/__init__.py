@@ -9,7 +9,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN, NAME, DEVICEIP, MANUFACTURER, UPDATE_INTERVAL, UPDATE_INTERVAL_DEFAULT, DID, STATUS, CONFIG, TYPE
 from .apex import Apex
-from .apex_data_update_coordinator import ApexDataUpdateCoordinator
+from .coordinator import ApexDataUpdateCoordinator
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({})}, extra=vol.ALLOW_EXTRA)
 

@@ -2,7 +2,7 @@ import logging
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, NAME, MANUFACTURER, DID, STATUS, TYPE, SYSTEM
-from .apex_data_update_coordinator import ApexDataUpdateCoordinator
+from .coordinator import ApexDataUpdateCoordinator
 
 logger = logging.getLogger(__name__)
 
