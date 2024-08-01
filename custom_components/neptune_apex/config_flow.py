@@ -63,8 +63,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.properties["sn"])
         self._abort_if_unique_id_configured()
         logger.debug(f"zeroconf discovered (device: {discovery_info.properties["sn"]}, hostname: {discovery_info.properties["hn"]}, ip_address: {discovery_info.ip_address})")
-        # return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
+        #return await self.async_step_user()
+        #return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
         # we need to capture and store the discovered device somewhere, so the user config flow can get it
+        data_schema = vol.Schema({
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(DEVICEIP, default = str(discovery_info.ip_address)): str,
+        })
+        return self.async_show_form(step_id="user", data_schema=data_schema, errors={}})
 
     @staticmethod
     @callback
