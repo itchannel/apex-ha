@@ -66,8 +66,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
         # we need to capture and store the discovered device somewhere, so the user config flow can get it
 
-        return self.async_step_user()
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
