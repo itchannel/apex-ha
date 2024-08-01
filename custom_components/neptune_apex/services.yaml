@@ -1,15 +1,16 @@
 set_output:
-  description: "Set the value of an output on the controller e.g. setting the lights to AUTO (Automatic) instead of using the switch entity in HA which only supports OFF/ON"
+  name: "Set Output"
+  description: "Set the value of an output on the controller e.g. setting the lights to AUTO (Automatic) instead of using the switch entity in HA which only supports OFF/ON."
   fields:
     did:
-      name: "DID"
-      description: "DID of selected output, can be obtained from attributes of the given switch in HA"
+      name: "Device ID"
+      description: "Device ID of selected output, can be obtained from attributes of the given switch in HA."
       example: "3_1"
       selector:
         text:
     setting:
       name: "Setting"
-      description: "Setting to set the output to e.g. ON/OFF/AUTO"
+      description: "Target setting for the output, one of: ON/OFF/AUTO"
       selector:
         select:
           options:
@@ -17,6 +18,7 @@ set_output:
             - "ON"
             - "AUTO"
 set_variable:
+  name: "Set Variable"
   description: "Ability to program variables on the controller e.g. Set 75 (Only Advanced mode variables supported currently!!"
   fields:
     did:
@@ -32,6 +34,7 @@ set_variable:
       selector:
         text:
 set_dosing_rate:
+  name: "Set Dosing Rate"
   description: "Set the dosing rate for a DOS or DQD dosing pump"
   fields:
     did:
@@ -53,6 +56,7 @@ set_dosing_rate:
       selector:
         text:
 refill_reservoir:
+  name: "Refill Reservoir"
   description: "Refill the reservoir for a DOS or DQD dosing pump"
   fields:
     did:
@@ -62,6 +66,7 @@ refill_reservoir:
       selector:
         text:
 set_temperature:
+  name: "Set Temperature"
   description: "Set an outlet to be a heater with the given target temperature "
   fields:
     did:
