@@ -14,21 +14,54 @@ from .apex import Apex
 logger = logging.getLogger(__name__)
 
 DOMAIN_CONFIG_FLOW_DATA = f"{DOMAIN}.config_flow.data"
+NEPTUNE_APEX_HOSTS = "neptune_apex_hosts"
+
+class _NeptuneApexHost:
+    def __init__(self, hn: str, sn: str, ip: str):
+        self._hn = hn
+        self._sn = sn
+        self._ip = ip
+        self._configured: bool = False
+
+    @property
+    def hn(self) -> str:
+        return self._hn
+
+    @property
+    def sn(self) -> str:
+        return self._sn
+
+    @property
+    def ip(self) -> str:
+        return self._ip
+
+    @property
+    def configured(self) -> bool:
+        return self._configured
+
+    def configure(self):
+        self._configured = True
+
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     async def _validate_input(self, data) -> ConfigFlowResult:
-        apex = Apex(data[CONF_USERNAME], data[CONF_PASSWORD], data[DEVICEIP])
+        # create the Apex device
+        device_ip = data[DEVICEIP]
+        apex = Apex(data[CONF_USERNAME], data[CONF_PASSWORD], device_ip)
+
+        # authorize with the apex device
         try:
             result = await self.hass.async_add_executor_job(apex.auth)
         except Exception as exc:
-            logger.error(f"exception when authenticating with {data[DEVICEIP]}: {exc}")
+            logger.error(f"exception when authenticating with {device_ip}: {exc}")
             raise InvalidAuth from exc
 
+        # bail out if auth seemed to succeed, but the result is empty
         if not result:
-            logger.error(f"failed to connect to {data[DEVICEIP]}")
+            logger.error(f"failed to connect to {device_ip}")
             raise CannotConnect
 
         # try to get the configuration name
@@ -36,16 +69,29 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if status is not None:
             name = str(status[SYSTEM][HOSTNAME]).capitalize()
         else:
-            name = f"Apex ({data.get(HOSTNAME, data[DEVICEIP])})"
+            logger.error(f"failed to connect to {device_ip}")
+            raise CannotConnect
 
+        # look to see if zeroconf found this device to mark it as complete
+        domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
+        devices: dict[str, _NeptuneApexHost] = domain_config_flow_data.setdefault("NEPTUNE_APEX_HOSTS", {})
+        unconfigured_device = next(((key, device) for key, device in devices.items() if device.ip == device_ip), None)
+        if unconfigured_device is not None:
+            logger.debug(f"marking host {device_ip} as configured")
+            unconfigured_device[1].configure()
+
+        # we're done, create the entry in hass
         return self.async_create_entry(title=name, data=data)
 
 
     async def async_step_user(self, data=None):
+        # start with no errrors
         errors = {}
 
+        # if the input came from a form that got filled in...
         if data is not None:
             try:
+                # do the configuration
                 return await self._validate_input(data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
@@ -57,11 +103,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # look to see if zeroconf found a device already and prefill the ip address if it did
         domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
-        devices: dict[str, str] = domain_config_flow_data.setdefault("devices", {})
-        key = next(iter(devices), None)
-        device_ip = devices[key] if key is not None else None
+        devices: dict[str, _NeptuneApexHost] = domain_config_flow_data.setdefault("NEPTUNE_APEX_HOSTS", {})
+        unconfigured_device = next(((key, device) for key, device in devices.items() if not device.configured), None)
+        device_ip = unconfigured_device[1].ip if unconfigured_device is not None else None
         logger.debug(f"in user setup with found device ip ({device_ip})")
 
+        # get the login info from the user
         data_schema = vol.Schema({
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
@@ -81,11 +128,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # we store the discovered device so the user config flow can get it
         domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
-        devices: dict[str, str] = domain_config_flow_data.setdefault("devices", {})
-        devices[discovery_info.properties["sn"]] = str(discovery_info.ip_address)
+        devices: dict[str, _NeptuneApexHost] = domain_config_flow_data.setdefault("NEPTUNE_APEX_HOSTS", {})
+        devices[discovery_info.properties["sn"]] = _NeptuneApexHost(discovery_info.properties["hn"], discovery_info.properties["sn"], str(discovery_info.ip_address))
 
+        # what can we return from here to keep the entry in the discovered devices notifications?
+        # XXX can we just return nothing?
         # try to run away
-        return await self.async_step_user()
+        #return await self.async_step_user()
 
     @staticmethod
     @callback
