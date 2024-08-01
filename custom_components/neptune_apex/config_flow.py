@@ -72,7 +72,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         #return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
         # we need to capture and store the discovered device somewhere, so the user config flow can get it
         domain_data = self.hass.data.get(DOMAIN, {})
+        self.hass.data[DOMAIN] = domain_data
         device_list = domain_data.get("device_list", [])
+        domain_data["device_list"] = device_list
         device_list.append(str(discovery_info.ip_address))
 
         # try to run away
