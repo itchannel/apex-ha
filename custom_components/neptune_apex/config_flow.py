@@ -1,53 +1,48 @@
 import logging
+from typing import Coroutine
 
 import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import SYSTEM, HOSTNAME
-
-from .const import (
-    DOMAIN,
-    DEVICEIP,
-    UPDATE_INTERVAL,
-    UPDATE_INTERVAL_DEFAULT
-)
+from .const import SYSTEM, HOSTNAME, DOMAIN, DEVICEIP, UPDATE_INTERVAL, UPDATE_INTERVAL_DEFAULT
 from .apex import Apex
 
 logger = logging.getLogger(__name__)
-
-async def validate_input(hass: core.HomeAssistant, data):
-    apex = Apex(data[CONF_USERNAME], data[CONF_PASSWORD], data[DEVICEIP])
-    try:
-        result = await hass.async_add_executor_job(apex.auth)
-    except Exception as exc:
-        logger.error(f"exception when authenticating with {data[DEVICEIP]}: {exc}")
-        raise InvalidAuth from exc
-
-    if not result:
-        logger.error(f"failed to connect to {data[DEVICEIP]}")
-        raise CannotConnect
-
-    # try to get the configuration
-    status = await hass.async_add_executor_job(apex.status)
-    name = str(status[SYSTEM][HOSTNAME]).capitalize() if status is not None else f"Apex ({data.get(HOSTNAME, data[DEVICEIP])})"
-
-    # return the title for the integration
-    return {"title": name}
-
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
-    async def async_step_user(self, user_input=None):
+    async def _validate_input(self, data) -> ConfigFlowResult:
+        apex = Apex(data[CONF_USERNAME], data[CONF_PASSWORD], data[DEVICEIP])
+        try:
+            result = await self.hass.async_add_executor_job(apex.auth)
+        except Exception as exc:
+            logger.error(f"exception when authenticating with {data[DEVICEIP]}: {exc}")
+            raise InvalidAuth from exc
+
+        if not result:
+            logger.error(f"failed to connect to {data[DEVICEIP]}")
+            raise CannotConnect
+
+        # try to get the configuration name
+        status = await self.hass.async_add_executor_job(apex.status)
+        if status is not None:
+            name = str(status[SYSTEM][HOSTNAME]).capitalize()
+        else:
+            name = f"Apex ({data.get(HOSTNAME, data[DEVICEIP])})"
+        return self.async_create_entry(title=name, data=data)
+
+
+    async def async_step_user(self, data=None):
         errors = {}
-        if (user_input is not None) and (CONF_USERNAME in user_input) and (CONF_PASSWORD in user_input) and (DEVICEIP in user_input):
+        if data is not None:
             try:
-                info = await validate_input(self.hass, user_input)
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return await self._validate_input(data)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -56,13 +51,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 logger.exception(f"Unexpected exception {exc}")
                 errors["base"] = "unknown"
 
-        logger.debug(f"user_input -> {user_input}")
         data_schema = vol.Schema({
-            vol.Required(CONF_USERNAME, default=None if user_input is None else user_input.get(CONF_USERNAME, None)): str,
-            vol.Required(CONF_PASSWORD, default=None if user_input is None else user_input.get(CONF_PASSWORD, None)): str,
-            vol.Required(DEVICEIP, default=None if user_input is None else user_input.get(DEVICEIP, None)): str,
+            vol.Required(CONF_USERNAME): str,
+            vol.Required(CONF_PASSWORD): str,
+            vol.Required(DEVICEIP): str,
         })
-
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo):
@@ -70,15 +63,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.properties["sn"])
         self._abort_if_unique_id_configured()
         logger.debug(f"zeroconf discovered (device: {discovery_info.properties["sn"]}, hostname: {discovery_info.properties["hn"]}, ip_address: {discovery_info.ip_address})")
-        data_schema = vol.Schema({
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(DEVICEIP, default=str(discovery_info.ip_address)): str,
-        })
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors={})
-
-        # note, we capture the hostname here and pass that too
         # return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
+        # we need to capture and store the discovered device somewhere, so the user config flow can get it
+
+        return self.async_step_user()
 
     @staticmethod
     @callback
