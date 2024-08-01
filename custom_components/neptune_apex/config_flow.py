@@ -131,11 +131,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         devices: dict[str, _NeptuneApexHost] = domain_config_flow_data.setdefault("NEPTUNE_APEX_HOSTS", {})
         devices[discovery_info.properties["sn"]] = _NeptuneApexHost(discovery_info.properties["hn"], discovery_info.properties["sn"], str(discovery_info.ip_address))
 
-        # what can we return from here to keep the entry in the discovered devices notifications?
-        # try to run away
-        result = await self.async_step_user()
-        logger.debug(f"result = {result}")
-        return result
+        # try to run away, wait for the user to configure it
+        return await self.async_step_user()
 
     @staticmethod
     @callback
