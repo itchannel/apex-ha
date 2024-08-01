@@ -38,7 +38,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             name = f"Apex ({data.get(HOSTNAME, data[DEVICEIP])})"
 
-        return await self.async_create_entry(title=name, data=data)
+        return self.async_create_entry(title=name, data=data)
 
 
     async def async_step_user(self, data=None):
