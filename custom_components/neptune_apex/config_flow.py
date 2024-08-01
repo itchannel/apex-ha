@@ -71,7 +71,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required(CONF_PASSWORD): str,
             vol.Required(DEVICEIP, default = str(discovery_info.ip_address)): str,
         })
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors={}})
+        return self.async_show_form(step_id="user", data_schema=data_schema, errors={})
 
     @staticmethod
     @callback
