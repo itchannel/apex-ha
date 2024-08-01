@@ -1,5 +1,5 @@
 import logging
-from typing import Coroutine
+from typing import Coroutine, Any
 
 import voluptuous as vol
 from homeassistant import config_entries, core, exceptions
@@ -12,6 +12,8 @@ from .const import SYSTEM, HOSTNAME, DOMAIN, DEVICEIP, UPDATE_INTERVAL, UPDATE_I
 from .apex import Apex
 
 logger = logging.getLogger(__name__)
+
+DOMAIN_CONFIG_FLOW_DATA = f"{DOMAIN}.config_flow.data"
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
@@ -52,9 +54,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 logger.exception(f"Unexpected exception {exc}")
                 errors["base"] = "unknown"
 
-        domain_data = self.hass.data.get(DOMAIN, {})
-        device_list = domain_data.get("device_list", [])
-        device_ip = device_list.pop () if len(device_list) > 0 else None
+        domain_data: dict[str, Any] = self.hass.data.get(DOMAIN_CONFIG_FLOW_DATA, {})
+        device_list: list[str] = domain_data.get("device_list", [])
+        device_ip = device_list.pop () if len(device_list) > 0 else "127.0.0.1"
+        logger.debug(f"in user setup with found device ip ({device_ip})")
 
         data_schema = vol.Schema({
             vol.Required(CONF_USERNAME): str,
@@ -71,10 +74,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         #return await self.async_step_user()
         #return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
         # we need to capture and store the discovered device somewhere, so the user config flow can get it
-        domain_data = self.hass.data.get(DOMAIN, {})
-        self.hass.data[DOMAIN] = domain_data
-        device_list = domain_data.get("device_list", [])
-        domain_data["device_list"] = device_list
+        domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
+        device_list: list[str] = domain_config_flow_data.setdefault("device_list", [])
         device_list.append(str(discovery_info.ip_address))
 
         # try to run away
