@@ -42,5 +42,6 @@
                     "description": "Target setting for the output, one of: ON/OFF/AUTO"
                 }
             }
+        }
     }
 }
