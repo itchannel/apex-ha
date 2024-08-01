@@ -86,14 +86,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # try to run away
         return await self.async_step_user()
-        #
-        # # try to run away
-        # data_schema = vol.Schema({
-        #     vol.Required(CONF_USERNAME): str,
-        #     vol.Required(CONF_PASSWORD): str,
-        #     vol.Required(DEVICEIP, default = str(discovery_info.ip_address)): str,
-        # })
-        # return self.async_show_form(step_id="user", data_schema=data_schema, errors={})
 
     @staticmethod
     @callback
