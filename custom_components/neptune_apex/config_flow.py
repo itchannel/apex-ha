@@ -37,7 +37,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             name = str(status[SYSTEM][HOSTNAME]).capitalize()
         else:
             name = f"Apex ({data.get(HOSTNAME, data[DEVICEIP])})"
-        return self.async_create_entry(title=name, data=data)
+
+        return await self.async_create_entry(title=name, data=data)
 
 
     async def async_step_user(self, data=None):
@@ -54,6 +55,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 logger.exception(f"Unexpected exception {exc}")
                 errors["base"] = "unknown"
 
+        # look to see if zeroconf found a device already and prefill the ip address if it did
         domain_data: dict[str, Any] = self.hass.data.get(DOMAIN_CONFIG_FLOW_DATA, {})
         device_list: list[str] = domain_data.get("device_list", [])
         device_ip = device_list.pop () if len(device_list) > 0 else "127.0.0.1"
@@ -62,29 +64,35 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(DEVICEIP, default=device_ip): str,
+            vol.Required(DEVICEIP, default=device_ip): str
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
     async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo):
+        logger.debug(f"zeroconf discovered (device: {discovery_info.properties["sn"]}, hostname: {discovery_info.properties["hn"]}, ip_address: {discovery_info.ip_address})")
+
         # use the serial number as a unique identifier
         existing_entry = await self.async_set_unique_id(discovery_info.properties["sn"])
         self._abort_if_unique_id_configured()
-        logger.debug(f"zeroconf discovered (device: {discovery_info.properties["sn"]}, hostname: {discovery_info.properties["hn"]}, ip_address: {discovery_info.ip_address})")
-        #return await self.async_step_user()
-        #return await self.async_step_user(user_input={DEVICEIP: str(discovery_info.ip_address), HOSTNAME: discovery_info.properties["hn"]})
-        # we need to capture and store the discovered device somewhere, so the user config flow can get it
+
+        # report that we got this far - the device is unique
+        logger.debug(f"unique (device: {discovery_info.properties["sn"]})")
+
+        # we store the discovered device so the user config flow can get it
         domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
-        device_list: list[str] = domain_config_flow_data.setdefault("device_list", [])
-        device_list.append(str(discovery_info.ip_address))
+        devices: dict[str, str] = domain_config_flow_data.setdefault("device_list", {})
+        devices[discovery_info.properties["sn"]] = str(discovery_info.ip_address)
 
         # try to run away
-        data_schema = vol.Schema({
-            vol.Required(CONF_USERNAME): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Required(DEVICEIP, default = str(discovery_info.ip_address)): str,
-        })
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors={})
+        return await self.async_step_user()
+        #
+        # # try to run away
+        # data_schema = vol.Schema({
+        #     vol.Required(CONF_USERNAME): str,
+        #     vol.Required(CONF_PASSWORD): str,
+        #     vol.Required(DEVICEIP, default = str(discovery_info.ip_address)): str,
+        # })
+        # return self.async_show_form(step_id="user", data_schema=data_schema, errors={})
 
     @staticmethod
     @callback
