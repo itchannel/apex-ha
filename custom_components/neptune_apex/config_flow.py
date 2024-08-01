@@ -58,8 +58,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # look to see if zeroconf found a device already and prefill the ip address if it did
         domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
         devices: dict[str, str] = domain_config_flow_data.setdefault("devices", {})
-        device_keys = devices.keys()
-        device_ip = devices[device_keys[0]] if len(device_keys) > 0 else None
+        key = next(iter(devices), None)
+        device_ip = devices[key] if key is not None else None
         logger.debug(f"in user setup with found device ip ({device_ip})")
 
         data_schema = vol.Schema({
