@@ -1,10 +1,10 @@
 import logging
-from typing import Coroutine, Any
+from typing import Any
 
 import voluptuous as vol
-from homeassistant import config_entries, core, exceptions
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant import config_entries, exceptions
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 
@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 DOMAIN_CONFIG_FLOW_DATA = f"{DOMAIN}.config_flow.data"
 NEPTUNE_APEX_HOSTS = "neptune_apex_hosts"
+
 
 class _NeptuneApexHost:
     def __init__(self, hn: str, sn: str, ip: str):
@@ -82,7 +83,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # we're done, create the entry in hass
         return self.async_create_entry(title=name, data=data)
-
 
     async def async_step_user(self, data=None):
         # start with no errrors
