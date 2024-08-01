@@ -56,9 +56,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         # look to see if zeroconf found a device already and prefill the ip address if it did
-        domain_data: dict[str, Any] = self.hass.data.get(DOMAIN_CONFIG_FLOW_DATA, {})
-        device_list: list[str] = domain_data.get("device_list", [])
-        device_ip = device_list.pop () if len(device_list) > 0 else "127.0.0.1"
+        domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
+        devices: dict[str, str] = domain_config_flow_data.setdefault("devices", {})
+        device_keys = devices.keys()
+        device_ip = devices[device_keys[0]] if len(device_keys) > 0 else None
         logger.debug(f"in user setup with found device ip ({device_ip})")
 
         data_schema = vol.Schema({
@@ -80,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # we store the discovered device so the user config flow can get it
         domain_config_flow_data: dict[str, Any] = self.hass.data.setdefault(DOMAIN_CONFIG_FLOW_DATA, {})
-        devices: dict[str, str] = domain_config_flow_data.setdefault("device_list", {})
+        devices: dict[str, str] = domain_config_flow_data.setdefault("devices", {})
         devices[discovery_info.properties["sn"]] = str(discovery_info.ip_address)
 
         # try to run away
