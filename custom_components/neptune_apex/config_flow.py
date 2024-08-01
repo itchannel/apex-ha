@@ -62,7 +62,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema({
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(DEVICEIP, device_ip): str,
+            vol.Required(DEVICEIP, default=device_ip): str,
         })
         return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
 
