@@ -1,5 +1,6 @@
 ## **Changelog**
-
+## Version 1.16
+- Remove deprecated async method and add long term statistic support(Thanks @mattrcampbell) 
 ## Version 1.15
  - Fix Apex Classic to use Basic Auth and JSON Status
  - Allow Apex Classic to Toggle Switches and Feed Cycle
