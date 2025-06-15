@@ -1,7 +1,10 @@
 import logging
 import re
 
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import (
+    SensorEntity,
+    SensorStateClass,
+)
 
 from . import ApexEntity
 from .const import DOMAIN, SENSORS, MEASUREMENTS, MANUAL_SENSORS
@@ -35,12 +38,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         async_add_entities([sensor], True)
 
 
-class ApexSensor(
-    ApexEntity,
-    Entity,
-):
+class ApexSensor(ApexEntity, SensorEntity):
     def __init__(self, coordinator, sensor, options):
-
+        _LOGGER.debug(sensor)
         self.sensor = sensor
         self.options = options
         self._attr = {}
@@ -144,6 +144,8 @@ class ApexSensor(
                             return value
     
     def process_prog(self, prog):
+        if len(prog) > 255:
+            return None
         if "Set PF" in prog:
             return prog
         test = re.findall("Set\s[^\d]*(\d+)", prog)
@@ -183,6 +185,12 @@ class ApexSensor(
                     return _SYSTEM_TEMP_UNIT
                 else:
                     return SENSORS[self.sensor["type"]]["measurement"]
+        return None
+
+    @property
+    def state_class(self):
+        if self.sensor["type"] in SENSORS:
+            return SensorStateClass.MEASUREMENT
         return None
 
     @property
