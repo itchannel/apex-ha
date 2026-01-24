@@ -36,6 +36,37 @@ class Switch(ApexEntity, SwitchEntity):
         # Required for HA 2022.7
         self.coordinator_context = object()
 
+    def _current_output_status(self):
+        """Return the current Apex status string for this output: ON/OFF/AON/AOF.
+        Returns None if not available (e.g. feed cycles or missing data).
+        """
+        if self.switch.get("type") == "Feed":
+            return None
+
+        # Prefer coordinator data (source of truth), fall back to cached self.switch
+        try:
+            for value in self.coordinator.data.get("outputs", []):
+                if value.get("did") == self.switch.get("did"):
+                    status = value.get("status")
+                    if isinstance(status, (list, tuple)) and status:
+                        return status[0]
+                    if isinstance(status, str):
+                        return status
+                    return None
+        except Exception as exc:
+            _LOGGER.debug("Unable to read output status from coordinator: %s", exc)
+
+        status = self.switch.get("status")
+        if isinstance(status, (list, tuple)) and status:
+            return status[0]
+        if isinstance(status, str):
+            return status
+        return None
+
+    def _is_auto_mode(self, status):
+        """True if Apex status indicates AUTO mode (AON/AOF)."""
+        return isinstance(status, str) and status.startswith("A")
+
     async def async_turn_on(self, **kwargs):
             if self.switch["type"] == "Feed":
                 update = await self.coordinator.hass.async_add_executor_job(
@@ -116,12 +147,8 @@ class Switch(ApexEntity, SwitchEntity):
                 # _LOGGER.error("Feed data is missing from the coordinator data.")
                 return False
         else:
-            for value in self.coordinator.data["outputs"]:
-                if value["did"] == self.switch["did"]:
-                    if value["status"][0] == "ON" or value["status"][0] == "AON":
-                        return True
-                    else:
-                        return False
+            status = self._current_output_status()
+            return status in ("ON", "AON")
 
 
 
@@ -135,4 +162,10 @@ class Switch(ApexEntity, SwitchEntity):
 
     @property
     def extra_state_attributes(self):
-        return self.switch
+        # Keep existing behavior (expose the switch dict) but add derived attributes.
+        attrs = dict(self.switch)  # copy to avoid mutating the original
+        status = self._current_output_status()
+        if status is not None:
+            attrs["apex_raw_status"] = status
+            attrs["apex_auto"] = self._is_auto_mode(status)
+        return attrs
