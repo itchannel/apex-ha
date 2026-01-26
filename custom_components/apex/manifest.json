@@ -1,17 +1,17 @@
 {
     "domain": "apex",
     "name": "Apex",
-    "codeowners": ["@itchannel"],
+    "codeowners": ["@timekillerj"],
     "config_flow": true,
     "dependencies": [],
-    "documentation": "https://github.com/itchannel/apex-ha",
+    "documentation": "https://github.com/timekillerj/apex-ha",
     "homekit": {},
     "integration_type": "device",
     "iot_class": "local_polling",
-    "issue_tracker": "https://github.com/itchannel/apex-ha/issues",
+    "issue_tracker": "https://github.com/timekillerj/apex-ha/issues",
     "loggers": ["custom_components.apex"],
     "requirements": [],
     "ssdp": [],
-    "version": "1.16",
+    "version": "1.18",
     "zeroconf": []
   }
