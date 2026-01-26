@@ -1,4 +1,8 @@
 ## **Changelog**
+## Version 1.18
+- Making it my own
+## Version 1.17
+- Forked from original and added auto attribute to entities
 ## Version 1.16
 - Remove deprecated async method and add long term statistic support(Thanks @mattrcampbell) 
 ## Version 1.15
