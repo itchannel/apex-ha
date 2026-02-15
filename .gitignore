@@ -10,3 +10,4 @@ __pycache__/
 # Intellij IDEA stores project information in this directory
 .idea
 apex-ha-venv
+.env
