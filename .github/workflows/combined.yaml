@@ -5,6 +5,16 @@ on:
   schedule:
     - cron: '0 0 * * *'
 jobs:
+  regression-tests:
+    runs-on: "ubuntu-latest"
+    name: Switch regression tests
+    steps:
+      - name: Check out the repository
+        uses: "actions/checkout@v3"
+
+      - name: Run regression tests
+        run: python3 -m unittest discover -s tests -v
+
   hacs:
     runs-on: "ubuntu-latest"
     name: HACS

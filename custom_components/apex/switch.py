@@ -60,6 +60,7 @@ class Switch(ApexEntity, SwitchEntity):
                     self.switch["status"] = update["status"]
                     _LOGGER.debug("Writing state ON")
                     self.async_write_ha_state()
+                    await self.coordinator.async_request_refresh()
 
            
     async def async_turn_off(self, **kwargs):
@@ -87,6 +88,7 @@ class Switch(ApexEntity, SwitchEntity):
                     self.switch["status"] = update["status"]
                     _LOGGER.debug("Writing state OFF")
                     self.async_write_ha_state()
+                    await self.coordinator.async_request_refresh()
 
     @property
     def name(self):
@@ -135,4 +137,13 @@ class Switch(ApexEntity, SwitchEntity):
 
     @property
     def extra_state_attributes(self):
-        return self.switch
+        """Return output attributes from the latest coordinator update."""
+        if self.switch["type"] == "Feed":
+            return dict(self.switch)
+
+        data = self.coordinator.data or {}
+        for output in data.get("outputs", []):
+            if output["did"] == self.switch["did"]:
+                return dict(output)
+
+        return {}
