@@ -63,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     async def async_set_options_service(service_call):
         await hass.async_add_executor_job(set_output, hass, service_call, coordinator)
+        await coordinator.async_request_refresh()
 
     async def async_set_variable_service(service_call):
         await hass.async_add_executor_job(set_variable, hass, service_call, coordinator)
